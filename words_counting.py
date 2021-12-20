@@ -36,9 +36,10 @@ if __name__ == '__main__':
     BOW_vectorizer.fit(train.text)
 
     total_words_list = BOW_vectorizer.get_feature_names_out()
-    total_words_list_lemmas = lemmas(total_words_list[65725:65745])
+    total_words_list_lemmas = lemmas(total_words_list)
     total_words_df = pd.DataFrame()
     total_words_df['words'] = total_words_list
+    total_words_df['lemmas'] = total_words_list_lemmas
 
     train_anger_df = train.loc[train.emotion == 'anger'].sample(n=min_emotion_value)
     train_joy_df = train.loc[train.emotion == 'joy'].sample(n=min_emotion_value)
@@ -120,6 +121,12 @@ if __name__ == '__main__':
     total_words_df['trust'] = train_trust_frequencies
     print(f'most trust word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_trust_frequencies)]}] '
           f'with frequency of {max(train_trust_frequencies)}')
+
+    duplicated_list = total_words_df.duplicated(subset=['lemmas'])
+    duplicated_words = total_words_df.lemmas[duplicated_list == True].tolist()
+    for index, word in enumerate(duplicated_words):
+        a = total_words_df.loc[total_words_df.lemmas == word, 'anger':'trust']
+        b = total_words_df.loc[total_words_df.lemmas == word, 'anger':'trust'].sum(axis=0).tolist()
 
 
 
