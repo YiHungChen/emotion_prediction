@@ -20,13 +20,30 @@ def get_wordnet_pos(tag):
         return None
 
 
-def lemmas(words_list):
-    tagged_sent = pos_tag(words_list)
+def lemmas_sentence(words_list):
+    output = []
+    for index, sentence in enumerate(words_list):
+        tokens = word_tokenize(sentence)
+        tagged_sent = pos_tag(tokens)
+        wnl = WordNetLemmatizer()
+        lemmas_sent = []
+        for tag in tagged_sent:
+            wordnet_pos = get_wordnet_pos(tag[1]) or wordnet.NOUN
+            lemmas_sent.append(wnl.lemmatize(tag[0], pos=wordnet_pos))  # 詞形還原
+        output.append(lemmas_sent)
+    return output
+
+
+def lemmas_words(words_list):
+    output = []
+    tokens = word_tokenize(words_list)
+    tagged_sent = pos_tag(tokens)
     wnl = WordNetLemmatizer()
     lemmas_sent = []
     for tag in tagged_sent:
         wordnet_pos = get_wordnet_pos(tag[1]) or wordnet.NOUN
         lemmas_sent.append(wnl.lemmatize(tag[0], pos=wordnet_pos))  # 詞形還原
+
     return lemmas_sent
 
 
