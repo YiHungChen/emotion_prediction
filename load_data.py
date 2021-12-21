@@ -32,9 +32,9 @@ for index, x in enumerate(tweets_text):
     x = x.replace('\'m', "am")
 
     x = re.sub("[0-9]", "", x)
-    x = lemmas_words(x)
-    print(f'\r{(index/len(tweets_text))*100 :.2f}%', end="")
+    output.append(lemmas_words(x))
 
+    print(f'\r{(index/len(tweets_text))*100 :.2f}%', end="")
     pass
 
 
