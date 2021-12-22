@@ -43,8 +43,8 @@ if __name__ == '__main__':
             if result:
                 train_sentence = train_sentence.append(words_list_valid.loc[words_list_valid.words == word,
                                                        'anger':'trust'] * result[0])
-            score = train_sentence.sum(axis=0)
-        print(score)
+        score = train_sentence.sum(axis=0)
+        # print(score)
         if len(score.to_list()):
             predict_emotion.append(train_sentence.sum(axis=0).idxmax())
             results.append(score.to_list())
