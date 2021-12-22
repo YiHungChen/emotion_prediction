@@ -8,6 +8,8 @@ import re
 import csv
 import numpy as np
 from lemmatization import lemmas_words
+import time
+from nltk.tokenize.treebank import TreebankWordDetokenizer
 
 tweets_df = pd.DataFrame()
 
@@ -22,32 +24,45 @@ with open('dm2021-lab2-hw2/tweets_DM.json') as jsonfile:
 
     pass
 
+total_duration = 0
+output = []
+
 for index, x in enumerate(tweets_text):
-    output = []
+    start = time.time()
     x = x.replace("<LH>", "")
     x = x.replace('\'s', " is")
     x = x.replace('\'ve', " have")
     x = x.replace('n\'t', " not")
     x = x.replace('\'re', " are")
-    x = x.replace('\'m', "am")
+    x = x.replace('\'m', " am")
+    x = x.replace('\'ll', " will")
+    x = x.replace('_', " ")
 
     x = re.sub("[0-9]", "", x)
-    output.append(lemmas_words(x))
+    output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))
 
-    print(f'\r{(index/len(tweets_text))*100 :.2f}%', end="")
+    end = time.time()
+    duration = end - start
+    total_duration += duration
+    progress = ((index + 1) / len(tweets_text)) * 100
+
+    et = total_duration*100/progress
+    td = total_duration
+    eta = et-td
+
+    et = time.strftime('%H:%M:%S', time.gmtime(total_duration*100/progress))
+    td = time.strftime('%H:%M:%S', time.gmtime(total_duration))
+    eta = time.strftime('%H:%M:%S', time.gmtime(eta))
+
+    print(f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}', end="")
     pass
-
-
-
-
-
-
+print("")
+tweets_df.to_pickle('Dataset/DS.pkl')
+print('Dataset/DS.pkl is saved !!!')
 
 tweets_df['id'] = tweets_id
 tweets_df['text'] = tweets_text
-
-
-
+tweets_df['lemmas'] = output
 
 tweets_ident = pd.read_csv('dm2021-lab2-hw2/data_identification.csv')
 tweets_ident = tweets_ident.rename(columns={"tweet_id": "id"})
@@ -62,4 +77,5 @@ tweets_df = pd.merge(tweets_df, tweets_emotion, on=['id'])
 
 tweets_df.to_pickle('Dataset/DS_train.pkl')
 tweets_df.to_csv('DS_train.csv')
-print(len(tweets_df))
+
+print('Dataset/DS_train.pkl is saved !!!')
