@@ -55,7 +55,7 @@ if __name__ == '__main__':
     train_anger_counts = BOW_vectorizer.transform(train_anger_df.lemmas)
     print(train_anger_counts.shape)
     train_anger_frequencies = []
-    train_anger_frequencies = np.asarray(train_anger_counts.sum(axis=0))[0] / len(train_anger_df)
+    train_anger_frequencies = np.asarray(train_anger_counts.sum(axis=0))[0]
     total_words_df['anger'] = train_anger_frequencies
     print(f'most anger word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_anger_frequencies)]}] '
           f'with frequency of {max(train_anger_frequencies)}')
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     train_joy_counts = BOW_vectorizer.transform(train_joy_df.lemmas)
     print(train_joy_counts.shape)
     train_joy_frequencies = []
-    train_joy_frequencies = np.asarray(train_joy_counts.sum(axis=0))[0] / len(train_joy_df)
+    train_joy_frequencies = np.asarray(train_joy_counts.sum(axis=0))[0]
     total_words_df['joy'] = train_joy_frequencies
     print(f'most joy word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_joy_frequencies)]}] '
           f'with frequency of {max(train_joy_frequencies)}')
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     train_anticipation_counts = BOW_vectorizer.transform(train_anticipation_df.lemmas)
     print(train_anticipation_counts.shape)
     train_anticipation_frequencies = []
-    train_anticipation_frequencies = np.asarray(train_anticipation_counts.sum(axis=0))[0] / len(train_anticipation_df)
+    train_anticipation_frequencies = np.asarray(train_anticipation_counts.sum(axis=0))[0]
     total_words_df['anticipation'] = train_anticipation_frequencies
     print(
         f'most anticipation word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_anticipation_frequencies)]}] '
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     train_disgust_counts = BOW_vectorizer.transform(train_disgust_df.lemmas)
     print(train_disgust_counts.shape)
     train_disgust_frequencies = []
-    train_disgust_frequencies = np.asarray(train_disgust_counts.sum(axis=0))[0] / len(train_disgust_df)
+    train_disgust_frequencies = np.asarray(train_disgust_counts.sum(axis=0))[0]
     total_words_df['disgust'] = train_disgust_frequencies
     print(f'most disgust word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_disgust_frequencies)]}] '
           f'with frequency of {max(train_disgust_frequencies)}')
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     train_fear_counts = BOW_vectorizer.transform(train_fear_df.lemmas)
     print(train_fear_counts.shape)
     train_fear_frequencies = []
-    train_fear_frequencies = np.asarray(train_fear_counts.sum(axis=0))[0] / len(train_fear_df)
+    train_fear_frequencies = np.asarray(train_fear_counts.sum(axis=0))[0]
     total_words_df['fear'] = train_fear_frequencies
     print(f'most fear word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_fear_frequencies)]}] '
           f'with frequency of {max(train_fear_frequencies)}')
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     train_sadness_counts = BOW_vectorizer.transform(train_sadness_df.lemmas)
     print(train_sadness_counts.shape)
     train_sadness_frequencies = []
-    train_sadness_frequencies = np.asarray(train_sadness_counts.sum(axis=0))[0] / len(train_sadness_df)
+    train_sadness_frequencies = np.asarray(train_sadness_counts.sum(axis=0))[0]
     total_words_df['sadness'] = train_sadness_frequencies
     print(f'most sadness word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_sadness_frequencies)]}] '
           f'with frequency of {max(train_sadness_frequencies)}')
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     train_surprise_counts = BOW_vectorizer.transform(train_surprise_df.lemmas)
     print(train_surprise_counts.shape)
     train_surprise_frequencies = []
-    train_surprise_frequencies = np.asarray(train_surprise_counts.sum(axis=0))[0] / len(train_surprise_df)
+    train_surprise_frequencies = np.asarray(train_surprise_counts.sum(axis=0))[0]
     total_words_df['surprise'] = train_surprise_frequencies
     print(f'most surprise word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_surprise_frequencies)]}] '
           f'with frequency of {max(train_surprise_frequencies)}')
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     train_trust_counts = BOW_vectorizer.transform(train_trust_df.lemmas)
     print(train_trust_counts.shape)
     train_trust_frequencies = []
-    train_trust_frequencies = np.asarray(train_trust_counts.sum(axis=0))[0] / len(train_trust_df)
+    train_trust_frequencies = np.asarray(train_trust_counts.sum(axis=0))[0]
     total_words_df['trust'] = train_trust_frequencies
     print(f'most trust word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_trust_frequencies)]}] '
           f'with frequency of {max(train_trust_frequencies)}')
