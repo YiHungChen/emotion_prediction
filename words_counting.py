@@ -42,6 +42,16 @@ if __name__ == '__main__':
     total_words_df['words'] = total_words_list
     # total_words_df['lemmas'] = total_words_list_lemmas
 
+    """
+    train_anger_df = train.loc[train.emotion == 'anger']
+    train_joy_df = train.loc[train.emotion == 'joy']
+    train_anticipation_df = train.loc[train.emotion == 'anticipation']
+    train_disgust_df = train.loc[train.emotion == 'disgust']
+    train_fear_df = train.loc[train.emotion == 'fear']
+    train_sadness_df = train.loc[train.emotion == 'sadness']
+    train_surprise_df = train.loc[train.emotion == 'surprise']
+    train_trust_df = train.loc[train.emotion == 'trust']
+    """
     train_anger_df = train.loc[train.emotion == 'anger'].sample(n=min_emotion_value)
     train_joy_df = train.loc[train.emotion == 'joy'].sample(n=min_emotion_value)
     train_anticipation_df = train.loc[train.emotion == 'anticipation'].sample(n=min_emotion_value)
@@ -50,6 +60,7 @@ if __name__ == '__main__':
     train_sadness_df = train.loc[train.emotion == 'sadness'].sample(n=min_emotion_value)
     train_surprise_df = train.loc[train.emotion == 'surprise'].sample(n=min_emotion_value)
     train_trust_df = train.loc[train.emotion == 'trust'].sample(n=min_emotion_value)
+
 
     # --- anger intensity --- #
     train_anger_counts = BOW_vectorizer.transform(train_anger_df.lemmas)
@@ -124,7 +135,7 @@ if __name__ == '__main__':
     print(f'most trust word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_trust_frequencies)]}] '
           f'with frequency of {max(train_trust_frequencies)}')
 
-    total_words_df.to_csv('words_list.csv')
-    total_words_df.to_pickle('Dataset/words_list.pkl')
+    total_words_df.to_csv('words_list/words_list.csv')
+    total_words_df.to_pickle('words_list/words_list.pkl')
 
     pass

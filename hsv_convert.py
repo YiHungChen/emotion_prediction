@@ -10,7 +10,7 @@ def normalization(df):
     return df
 
 
-word_list_df = pd.read_pickle('Dataset/words_list.pkl')
+word_list_df = pd.read_pickle('words_list/words_list.pkl')
 word_list_df['intensity'] = word_list_df.loc[:, 'anger':'trust'].max(axis=1, numeric_only=True)
 word_list_df = normalization(word_list_df)
 word_list_df = word_list_df.dropna()
@@ -18,8 +18,8 @@ word_list_df['max'] = word_list_df.loc[:, 'anger':'trust'].max(axis=1, numeric_o
 word_list_df['3rd_max'] = word_list_df.loc[:, 'anger':'trust'].apply(lambda row: row.nlargest(3).values[-1], axis=1)
 word_list_df['saturation'] = ((word_list_df['max'] - word_list_df['3rd_max']) / word_list_df['max'])
 
-word_list_df.to_csv('words_list_spe.csv')
-word_list_df.to_pickle('Dataset/words_list_spe.pkl')
+word_list_df.to_csv('hsv/hsv_list_spe.csv')
+word_list_df.to_pickle('hsv/hsv_list_spe.pkl')
 print(len(word_list_df))
 
 

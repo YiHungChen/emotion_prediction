@@ -10,17 +10,18 @@ def unique_list(l):
     return ulist
 
 
-
 if __name__ == '__main__':
-    dataset_df = pd.read_pickle('Dataset/DS_train.pkl').sample(n=10000).reset_index(drop=True)
+    # dataset_df = pd.read_pickle('Dataset/DS_train.pkl').sample(n=100000).reset_index(drop=True)
+    dataset_df = pd.read_pickle('Dataset/DS_train.pkl')[:100000]
     msk = np.random.rand(len(dataset_df)) <= 0.8
 
     train_df = dataset_df[msk].reset_index(drop=True)
     valid_df = dataset_df[~msk].reset_index(drop=True)
 
+    train_df = dataset_df
     train_output = train_df.emotion
 
-    words_list = pd.read_pickle('Dataset/words_list_spe.pkl')
+    words_list = pd.read_pickle('hsv/hsv_list_spe.pkl')
     words_list_valid = words_list
     # words_list_valid = words_list.loc[words_list.saturation >= 0.9]
     words_list_valid = words_list_valid.loc[words_list_valid.intensity >= 8]
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     total_duration = 0
 
     for index_tweets, tweet in enumerate(train_df.lemmas):
-        tweet = ' '.join(unique_list(tweet.split()))
+        # tweet = ' '.join(unique_list(tweet.split()))
         start = time.time()
         train_sentence = pd.DataFrame()
         for index, word in enumerate(analyze(tweet)):
@@ -43,7 +44,8 @@ if __name__ == '__main__':
                 train_sentence = train_sentence.append(words_list_valid.loc[words_list_valid.words == word,
                                                        'anger':'trust'] * result[0])
             score = train_sentence.sum(axis=0)
-        if score.to_list():
+        print(score)
+        if len(score.to_list()):
             predict_emotion.append(train_sentence.sum(axis=0).idxmax())
             results.append(score.to_list())
         else:
@@ -64,15 +66,11 @@ if __name__ == '__main__':
         td = time.strftime('%H:%M:%S', time.gmtime(total_duration))
         eta = time.strftime('%H:%M:%S', time.gmtime(eta))
 
-        print(f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}', end="")
+        print(f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}, ,{len(score)}, {index_tweets}, {train_df.id[index]}', end="")
 
     output = pd.DataFrame({'id': tweet_id, 'predict_emotion': predict_emotion, 'score': results})
     output['output'] = train_output
     output.to_csv('result.csv')
     output.to_pickle('result.pkl')
 
-
-
     pass
-
-
