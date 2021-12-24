@@ -10,6 +10,8 @@ import numpy as np
 from lemmatization import lemmas_words
 import time
 from nltk.tokenize.treebank import TreebankWordDetokenizer
+from tqdm import tqdm
+import multiprocessing
 
 tweets_df = pd.DataFrame()
 
@@ -26,6 +28,35 @@ with open('dm2021-lab2-hw2/tweets_DM.json') as jsonfile:
 
 total_duration = 0
 output = []
+
+
+def data_cleaning(x):
+    x = x.replace("<LH>", "")
+    x = x.replace('\'s', " is")
+    x = x.replace('\'ve', " have")
+    x = x.replace('n\'t', " not")
+    x = x.replace('\'re', " are")
+    x = x.replace('\'m', " am")
+    x = x.replace('\'ll', " will")
+    x = x.replace('_', " ")
+
+    x = re.sub("[0-9#@]", "", x)
+    # x = re.sub("", "", x)
+    # x = re.sub("", "", x)
+    output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))
+
+
+    pass
+
+# tweets_text = tweets_text.apply(lambda x: data_cleaning(x))
+value = tqdm(tweets_text)
+
+tweets_text = list(zip(*map(data_cleaning, value)))
+# tweets_text.map(data_cleaning())
+
+
+
+
 
 for index, x in enumerate(tweets_text):
     start = time.time()
