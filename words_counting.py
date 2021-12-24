@@ -7,13 +7,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
+import nltk
 from lemmatization import lemmas_sentence
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 
 # --- main --- #
 if __name__ == '__main__':
     # --- load dataset --- #
-    train = pd.read_pickle('Dataset/DS_train.pkl')
+    train = pd.read_pickle('Dataset/DS_train.pkl')[:1000]
 
     # --- calculate the histogram --- #
     post_total = len(train)
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     plt.show()
 
     # --- create total words list --- #
-    BOW_vectorizer = CountVectorizer()
+    BOW_vectorizer = CountVectorizer(stop_words='english', tokenizer=nltk.word_tokenize)
     BOW_vectorizer.fit(train.lemmas)
 
     total_words_list = BOW_vectorizer.get_feature_names_out()
