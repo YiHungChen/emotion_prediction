@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     words_list = pd.read_pickle('hsv/hsv_list_spe.pkl')
     words_list_valid = words_list
-    # words_list_valid = words_list.loc[words_list.saturation >= 0.9]
+    words_list_valid = words_list.loc[words_list.saturation >= 0.9]
     words_list_valid = words_list_valid.loc[words_list_valid.intensity >= 8]
 
     words_counter = CountVectorizer()
