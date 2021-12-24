@@ -12,7 +12,7 @@ def unique_list(l):
 
 if __name__ == '__main__':
     # dataset_df = pd.read_pickle('Dataset/DS_train.pkl').sample(n=100000).reset_index(drop=True)
-    dataset_df = pd.read_pickle('Dataset/DS_train.pkl')[:100000]
+    dataset_df = pd.read_pickle('Dataset/DS_train.pkl')
     msk = np.random.rand(len(dataset_df)) <= 0.8
 
     train_df = dataset_df[msk].reset_index(drop=True)
@@ -51,7 +51,7 @@ if __name__ == '__main__':
         else:
             predict_emotion.append('joy')
             results.append([-1, -1, -1, -1, -1, -1, -1, -1])
-        tweet_id.append(train_df.id[index])
+        tweet_id.append(train_df.id[index_tweets])
 
         end = time.time()
         duration = end - start
