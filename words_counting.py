@@ -61,7 +61,6 @@ if __name__ == '__main__':
     train_surprise_df = train.loc[train.emotion == 'surprise'].sample(n=min_emotion_value)
     train_trust_df = train.loc[train.emotion == 'trust'].sample(n=min_emotion_value)
 
-
     # --- anger intensity --- #
     train_anger_counts = BOW_vectorizer.transform(train_anger_df.lemmas)
     print(train_anger_counts.shape)
