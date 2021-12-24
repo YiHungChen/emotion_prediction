@@ -46,51 +46,13 @@ def data_cleaning(x):
     # x = re.sub("", "", x)
     # x = re.sub("", "", x)
     output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))
-
-
+    return output
     pass
 
+tweets_text = tweets_text[:10]
 # tweets_text = tweets_text.apply(lambda x: data_cleaning(x))
-value = tqdm(tweets_text)
-
-tweets_text = list(zip(*map(data_cleaning, value)))
+tweets_text = list(map(data_cleaning, tweets_text))
 # tweets_text.map(data_cleaning())
-
-
-
-
-
-for index, x in enumerate(tweets_text):
-    start = time.time()
-    x = x.replace("<LH>", "")
-    x = x.replace('\'s', " is")
-    x = x.replace('\'ve', " have")
-    x = x.replace('n\'t', " not")
-    x = x.replace('\'re', " are")
-    x = x.replace('\'m', " am")
-    x = x.replace('\'ll', " will")
-    x = x.replace('_', " ")
-
-    x = re.sub("[0-9]", "", x)
-    output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))
-
-    end = time.time()
-    duration = end - start
-    total_duration += duration
-    progress = ((index + 1) / len(tweets_text)) * 100
-
-    et = total_duration*100/progress
-    td = total_duration
-    eta = et-td
-
-    et = time.strftime('%H:%M:%S', time.gmtime(total_duration*100/progress))
-    td = time.strftime('%H:%M:%S', time.gmtime(total_duration))
-    eta = time.strftime('%H:%M:%S', time.gmtime(eta))
-
-    print(f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}', end="")
-    pass
-print("")
-
 
 tweets_df['id'] = tweets_id
 tweets_df['text'] = tweets_text
