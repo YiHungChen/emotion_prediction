@@ -40,18 +40,18 @@ def data_cleaning(x):
     x = x.replace('\'ll', " will")
     x = x.replace('_', " ")
 
-    x = re.sub("[0-9#@]", "", x)
+    x = re.sub('[0-9]', "", x)
+    x = re.sub(r'@\w+', "", x)
+    x = re.sub(r'#\w+', "", x)
     # x = re.sub("", "", x)
     # x = re.sub("", "", x)
     output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))
-
-
+    return output
     pass
 
+tweets_text = tweets_text[:10]
 # tweets_text = tweets_text.apply(lambda x: data_cleaning(x))
-value = tqdm(tweets_text)
-
-tweets_text = list(zip(*map(data_cleaning, value)))
+tweets_text = list(map(data_cleaning, tweets_text))
 # tweets_text.map(data_cleaning())
 
 tweets_df['id'] = tweets_id
