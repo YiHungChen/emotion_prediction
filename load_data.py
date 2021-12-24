@@ -57,8 +57,7 @@ for index, x in enumerate(tweets_text):
     print(f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}', end="")
     pass
 print("")
-tweets_df.to_pickle('Dataset/DS.pkl')
-print('Dataset/DS.pkl is saved !!!')
+
 
 tweets_df['id'] = tweets_id
 tweets_df['text'] = tweets_text
@@ -68,6 +67,9 @@ tweets_ident = pd.read_csv('dm2021-lab2-hw2/data_identification.csv')
 tweets_ident = tweets_ident.rename(columns={"tweet_id": "id"})
 
 tweets_df = pd.merge(tweets_df, tweets_ident, on=['id'])
+
+tweets_df.to_pickle('Dataset/DS.pkl')
+print('Dataset/DS.pkl is saved !!!')
 
 tweets_emotion = pd.read_csv('dm2021-lab2-hw2/emotion.csv')
 tweets_emotion = tweets_emotion.rename(columns={"tweet_id": "id"})

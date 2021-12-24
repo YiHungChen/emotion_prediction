@@ -16,3 +16,13 @@
 /DS.pkl
 /result.pkl
 /results.pkl
+/hsv/hsv_list_spe.csv
+/hsv/hsv_list_spe.pkl
+/result_test.pkl
+/words_list/words_list.csv
+/words_list/words_list.pkl
+/logs/
+/runs/
+/model/
+
+/result_all.pkl

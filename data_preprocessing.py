@@ -10,9 +10,13 @@ def unique_list(l):
     return ulist
 
 
-if __name__ == '__main__':
+def load_data(num_data=0):
     # dataset_df = pd.read_pickle('Dataset/DS_train.pkl').sample(n=100000).reset_index(drop=True)
-    dataset_df = pd.read_pickle('Dataset/DS_train.pkl')
+    if not num_data:
+        dataset_df = pd.read_pickle('Dataset/DS_train.pkl')
+    else:
+        dataset_df = pd.read_pickle('Dataset/DS_train.pkl')[:num_data]
+
     msk = np.random.rand(len(dataset_df)) <= 0.8
 
     train_df = dataset_df[msk].reset_index(drop=True)
@@ -20,27 +24,59 @@ if __name__ == '__main__':
 
     train_df = dataset_df
     train_output = train_df.emotion
+    return train_df, train_output
 
+
+def load_word_list(thr_saturation=0, thr_intensity=0):
     words_list = pd.read_pickle('hsv/hsv_list_spe.pkl')
     words_list_valid = words_list
-    # words_list_valid = words_list.loc[words_list.saturation >= 0.9]
-    words_list_valid = words_list_valid.loc[words_list_valid.intensity >= 8]
+    words_list_valid = words_list.loc[words_list.saturation >= thr_saturation]
+    words_list_valid = words_list_valid.loc[words_list_valid.intensity >= thr_intensity]
+
+    return words_list_valid
+
+
+def load_word_counter(words_list_valid: pd.DataFrame()):
 
     words_counter = CountVectorizer()
     words_counter = words_counter.fit(words_list_valid.words)
     analyze = words_counter.build_analyzer()
+
+    return words_counter, analyze
+
+
+if __name__ == '__main__':
+    # dataset_df = pd.read_pickle('Dataset/DS_train.pkl').sample(n=100000).reset_index(drop=True)
+    # --- load data --- #
+    train_df, train_output = load_data()
+
+    # --- load word list --- #
+    words_list_valid = load_word_list(thr_saturation=0, thr_intensity=8)
+
+    # --- initiate the word counter --- #
+    words_counter, analyze = load_word_counter(words_list_valid)
+
+    # --- initiate the parameters --- #
     results = []
     predict_emotion = []
     tweet_id = []
     total_duration = 0
 
     for index_tweets, tweet in enumerate(train_df.lemmas):
-        # tweet = ' '.join(unique_list(tweet.split()))
+
+        # --- clean the repeated words --- #
+        tweet = ' '.join(unique_list(tweet.split()))
+
+        # --- start time counting --- #
         start = time.time()
+
+        # --- initiate the temp sentence --- #
         train_sentence = pd.DataFrame()
+
         for index, word in enumerate(analyze(tweet)):
-            result = words_list_valid.loc[words_list_valid.words == word, 'saturation'].to_list()
-            if result:
+
+            result = words_list_valid.loc[words_list_valid.words == word, 'saturation'].values
+            if result.size:
                 train_sentence = train_sentence.append(words_list_valid.loc[words_list_valid.words == word,
                                                        'anger':'trust'] * result[0])
         score = train_sentence.sum(axis=0)
@@ -66,7 +102,9 @@ if __name__ == '__main__':
         td = time.strftime('%H:%M:%S', time.gmtime(total_duration))
         eta = time.strftime('%H:%M:%S', time.gmtime(eta))
 
-        print(f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}, ,{len(score)}, {index_tweets}, {train_df.id[index]}', end="")
+        print(
+            f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}, ,{len(score)}, {index_tweets}, {train_df.id[index]}',
+            end="")
 
     output = pd.DataFrame({'id': tweet_id, 'predict_emotion': predict_emotion, 'score': results})
     output['output'] = train_output
