@@ -37,7 +37,6 @@ def load_word_list(thr_saturation=0, thr_intensity=0):
 
 
 def load_word_counter(words_list_valid: pd.DataFrame()):
-
     words_counter = CountVectorizer()
     words_counter = words_counter.fit(words_list_valid.words)
     analyze = words_counter.build_analyzer()
@@ -56,6 +55,10 @@ if __name__ == '__main__':
     # --- initiate the word counter --- #
     words_counter, analyze = load_word_counter(words_list_valid)
 
+    output = pd.DataFrame()
+
+    start= time.time()
+
     # --- initiate the parameters --- #
     results = []
     predict_emotion = []
@@ -73,14 +76,14 @@ if __name__ == '__main__':
         # --- initiate the temp sentence --- #
         train_sentence = pd.DataFrame()
 
-        for index, word in enumerate(analyze(tweet)):
+        train_sentence = words_list_valid.loc[words_list_valid.words.isin(analyze(tweet)), 'anger':'trust']
+        train_saturation = words_list_valid.loc[words_list_valid.words.isin(analyze(tweet)), 'saturation']
+        train_sentence = train_sentence.mul(train_saturation, axis=0)
 
-            result = words_list_valid.loc[words_list_valid.words == word, 'saturation'].values
-            if result.size:
-                train_sentence = train_sentence.append(words_list_valid.loc[words_list_valid.words == word,
-                                                       'anger':'trust'] * result[0])
         score = train_sentence.sum(axis=0)
+
         # print(score)
+
         if len(score.to_list()):
             predict_emotion.append(train_sentence.sum(axis=0).idxmax())
             results.append(score.to_list())
@@ -103,11 +106,11 @@ if __name__ == '__main__':
         eta = time.strftime('%H:%M:%S', time.gmtime(eta))
 
         print(
-            f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}, ,{len(score)}, {index_tweets}, {train_df.id[index]}',
-            end="")
-
+            f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta}', end="")
+    
     output = pd.DataFrame({'id': tweet_id, 'predict_emotion': predict_emotion, 'score': results})
     output['output'] = train_output
+
     output.to_csv('result.csv')
     output.to_pickle('result.pkl')
 
