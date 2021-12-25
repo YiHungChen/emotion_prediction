@@ -27,3 +27,6 @@
 
 /result_all.pkl
 /words_list/
+/result/
+*.csv
+*.pkl
