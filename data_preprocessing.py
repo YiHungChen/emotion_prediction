@@ -18,14 +18,19 @@ def load_data(num_data=0):
     else:
         dataset_df = pd.read_pickle('Dataset/DS_train.pkl')[:num_data]
 
-    msk = np.random.rand(len(dataset_df)) <= 0.8
-
-    train_df = dataset_df[msk].reset_index(drop=True)
-    valid_df = dataset_df[~msk].reset_index(drop=True)
-
     train_df = dataset_df
-    train_output = train_df.emotion
+
     return train_df
+
+
+def load_data_test():
+    # dataset_df = pd.read_pickle('Dataset/DS_train.pkl').sample(n=100000).reset_index(drop=True)
+
+    dataset_df = pd.read_pickle('Dataset/DS.pkl')
+    dataset_df = dataset_df.loc[dataset_df.identification == 'test'].reset_index(drop=True)
+
+    test_df = dataset_df
+    return test_df
 
 
 def load_word_list(thr_saturation=0, thr_intensity=0):
@@ -38,7 +43,7 @@ def load_word_list(thr_saturation=0, thr_intensity=0):
 
 
 def load_word_counter(words_list_valid: pd.DataFrame()):
-    words_counter = CountVectorizer(stop_words='english', tokenizer=nltk.word_tokenize)
+    words_counter = CountVectorizer(stop_words='english')
     words_counter = words_counter.fit(words_list_valid.words)
     analyze = words_counter.build_analyzer()
 
@@ -124,8 +129,25 @@ def training_data():
     pass
 
 
+def test_data():
+    # --- load data --- #
+    test_df = load_data_test()
+
+    # --- load word list --- #
+    words_list_valid = load_word_list(thr_saturation=0, thr_intensity=8)
+
+    # --- score calculation --- #
+    output = score_calculation(test_df, words_list_valid)
+
+    # --- output file --- #
+    output.to_csv('result_test.csv')
+    output.to_pickle('result_test.pkl')
+
+
 if __name__ == '__main__':
 
     training_data()
+
+    # test_data()
 
     pass

@@ -45,6 +45,29 @@ def label_decode(le, one_hot_label):
     dec = np.argmax(one_hot_label, axis=1)
     return le.inverse_transform(dec)
 
+
+class Model_score(nn.Module):
+    def __init__(self, features):
+        super(Model_score, self).__init__()
+        # --- input use the feactures to define -- #
+        self.nn1 = nn.Linear(features, 16).to(device)
+        kaiming_uniform_(self.nn1.weight, nonlinearity='selu')
+        self.nn2 = nn.Linear(16, 16).to(device)
+        kaiming_uniform_(self.nn2.weight, nonlinearity='selu')
+        self.nn3 = nn.Linear(16, 8).to(device)
+        kaiming_uniform_(self.nn3.weight, nonlinearity='selu')
+
+        self.drop = nn.Dropout(p=0.2).to(device)
+
+    def forward(self, x):
+        x = self.nn1(x)
+        x = self.nn2(x)
+        x = self.nn3(x)
+        x = F.softmax(x, dim=1)
+
+        return x
+
+
 class Model(nn.Module):
     def __init__(self, features):
         super(Model, self).__init__()
@@ -112,7 +135,7 @@ class Model(nn.Module):
         return x
 
 
-def train_model(x_train, model, epoches, x_test=None):
+def train_model(x_train, model, epoches, model_name, x_test=None):
     # --- initialize lowest loss --- #
     lowest_loss = 100000
 
@@ -177,7 +200,7 @@ def train_model(x_train, model, epoches, x_test=None):
         # --- save weight --- #
         if total_test_loss / len(x_test) < lowest_loss:
             lowest_loss = total_test_loss / len(x_test)
-            torch.save(model, f'model/model_{time_now}-2310.pth', _use_new_zipfile_serialization=False)
+            torch.save(model, model_name, _use_new_zipfile_serialization=False)
             print('Model saved.')
             pass
 

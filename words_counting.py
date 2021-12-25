@@ -11,10 +11,41 @@ import nltk
 from lemmatization import lemmas_sentence
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 
+def myRange(start,end,step):
+    i = start
+    while i < end:
+        yield i
+        i += step
+    yield end
+
+
+def calculate_frequency(train, emotion, min_emotion_value, total_words_df):
+    # --- joy intensity --- #
+    num_emotion = len(train.loc[train.emotion == emotion])
+    emotion_frequencies = pd.DataFrame({'words': BOW_vectorizer.get_feature_names_out()})
+    last_batch = 0
+    for i in myRange(min_emotion_value, num_emotion, min_emotion_value):
+        rest = min_emotion_value - (i - last_batch)
+        emotion_df = train.loc[train.emotion == emotion][last_batch: i]
+        if rest:
+            emotion_df = emotion_df.append(train.loc[train.emotion == emotion][0:last_batch].sample(n=rest))
+            pass
+
+        emotion_counts = BOW_vectorizer.transform(emotion_df.lemmas)
+        # print(train_joy_counts.shape)
+        emotion_frequencies[i] = np.asarray(emotion_counts.sum(axis=0))[0]
+        last_batch = i
+        pass
+    total_words_df[emotion] = emotion_frequencies.max(axis=1, numeric_only=True)
+    print(f'most {emotion} word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(total_words_df[emotion])]}] '
+          f'with frequency of {max(total_words_df[emotion])}')
+    return total_words_df
+
+
 # --- main --- #
 if __name__ == '__main__':
     # --- load dataset --- #
-    train = pd.read_pickle('Dataset/DS_train.pkl')[:1000]
+    train = pd.read_pickle('Dataset/DS_train.pkl')
 
     # --- calculate the histogram --- #
     post_total = len(train)
@@ -34,7 +65,7 @@ if __name__ == '__main__':
     plt.show()
 
     # --- create total words list --- #
-    BOW_vectorizer = CountVectorizer(stop_words='english', tokenizer=nltk.word_tokenize)
+    BOW_vectorizer = CountVectorizer(stop_words='english')
     BOW_vectorizer.fit(train.lemmas)
 
     total_words_list = BOW_vectorizer.get_feature_names_out()
@@ -43,97 +74,14 @@ if __name__ == '__main__':
     total_words_df['words'] = total_words_list
     # total_words_df['lemmas'] = total_words_list_lemmas
 
-    """
-    train_anger_df = train.loc[train.emotion == 'anger']
-    train_joy_df = train.loc[train.emotion == 'joy']
-    train_anticipation_df = train.loc[train.emotion == 'anticipation']
-    train_disgust_df = train.loc[train.emotion == 'disgust']
-    train_fear_df = train.loc[train.emotion == 'fear']
-    train_sadness_df = train.loc[train.emotion == 'sadness']
-    train_surprise_df = train.loc[train.emotion == 'surprise']
-    train_trust_df = train.loc[train.emotion == 'trust']
-    """
-    train_anger_df = train.loc[train.emotion == 'anger'].sample(n=min_emotion_value)
-    train_joy_df = train.loc[train.emotion == 'joy'].sample(n=min_emotion_value)
-    train_anticipation_df = train.loc[train.emotion == 'anticipation'].sample(n=min_emotion_value)
-    train_disgust_df = train.loc[train.emotion == 'disgust'].sample(n=min_emotion_value)
-    train_fear_df = train.loc[train.emotion == 'fear'].sample(n=min_emotion_value)
-    train_sadness_df = train.loc[train.emotion == 'sadness'].sample(n=min_emotion_value)
-    train_surprise_df = train.loc[train.emotion == 'surprise'].sample(n=min_emotion_value)
-    train_trust_df = train.loc[train.emotion == 'trust'].sample(n=min_emotion_value)
-
-    # --- anger intensity --- #
-    train_anger_counts = BOW_vectorizer.transform(train_anger_df.lemmas)
-    print(train_anger_counts.shape)
-    train_anger_frequencies = []
-    train_anger_frequencies = np.asarray(train_anger_counts.sum(axis=0))[0]
-    total_words_df['anger'] = train_anger_frequencies
-    print(f'most anger word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_anger_frequencies)]}] '
-          f'with frequency of {max(train_anger_frequencies)}')
-
-    # --- joy intensity --- #
-    train_joy_counts = BOW_vectorizer.transform(train_joy_df.lemmas)
-    print(train_joy_counts.shape)
-    train_joy_frequencies = []
-    train_joy_frequencies = np.asarray(train_joy_counts.sum(axis=0))[0]
-    total_words_df['joy'] = train_joy_frequencies
-    print(f'most joy word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_joy_frequencies)]}] '
-          f'with frequency of {max(train_joy_frequencies)}')
-
-    # --- anticipation intensity --- #
-    train_anticipation_counts = BOW_vectorizer.transform(train_anticipation_df.lemmas)
-    print(train_anticipation_counts.shape)
-    train_anticipation_frequencies = []
-    train_anticipation_frequencies = np.asarray(train_anticipation_counts.sum(axis=0))[0]
-    total_words_df['anticipation'] = train_anticipation_frequencies
-    print(
-        f'most anticipation word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_anticipation_frequencies)]}] '
-        f'with frequency of {max(train_anticipation_frequencies)}')
-
-    # --- disgust intensity --- # 
-    train_disgust_counts = BOW_vectorizer.transform(train_disgust_df.lemmas)
-    print(train_disgust_counts.shape)
-    train_disgust_frequencies = []
-    train_disgust_frequencies = np.asarray(train_disgust_counts.sum(axis=0))[0]
-    total_words_df['disgust'] = train_disgust_frequencies
-    print(f'most disgust word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_disgust_frequencies)]}] '
-          f'with frequency of {max(train_disgust_frequencies)}')
-
-    # --- fear intensity --- # 
-    train_fear_counts = BOW_vectorizer.transform(train_fear_df.lemmas)
-    print(train_fear_counts.shape)
-    train_fear_frequencies = []
-    train_fear_frequencies = np.asarray(train_fear_counts.sum(axis=0))[0]
-    total_words_df['fear'] = train_fear_frequencies
-    print(f'most fear word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_fear_frequencies)]}] '
-          f'with frequency of {max(train_fear_frequencies)}')
-
-    # --- sadness intensity --- # 
-    train_sadness_counts = BOW_vectorizer.transform(train_sadness_df.lemmas)
-    print(train_sadness_counts.shape)
-    train_sadness_frequencies = []
-    train_sadness_frequencies = np.asarray(train_sadness_counts.sum(axis=0))[0]
-    total_words_df['sadness'] = train_sadness_frequencies
-    print(f'most sadness word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_sadness_frequencies)]}] '
-          f'with frequency of {max(train_sadness_frequencies)}')
-
-    # --- surprise intensity --- # 
-    train_surprise_counts = BOW_vectorizer.transform(train_surprise_df.lemmas)
-    print(train_surprise_counts.shape)
-    train_surprise_frequencies = []
-    train_surprise_frequencies = np.asarray(train_surprise_counts.sum(axis=0))[0]
-    total_words_df['surprise'] = train_surprise_frequencies
-    print(f'most surprise word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_surprise_frequencies)]}] '
-          f'with frequency of {max(train_surprise_frequencies)}')
-
-    # --- trust intensity --- # 
-    train_trust_counts = BOW_vectorizer.transform(train_trust_df.lemmas)
-    print(train_trust_counts.shape)
-    train_trust_frequencies = []
-    train_trust_frequencies = np.asarray(train_trust_counts.sum(axis=0))[0]
-    total_words_df['trust'] = train_trust_frequencies
-    print(f'most trust word: [{BOW_vectorizer.get_feature_names_out()[np.argmax(train_trust_frequencies)]}] '
-          f'with frequency of {max(train_trust_frequencies)}')
+    total_words_df = calculate_frequency(train, 'anger', min_emotion_value, total_words_df)
+    total_words_df = calculate_frequency(train, 'joy', min_emotion_value, total_words_df)
+    total_words_df = calculate_frequency(train, 'anticipation', min_emotion_value, total_words_df)
+    total_words_df = calculate_frequency(train, 'disgust', min_emotion_value, total_words_df)
+    total_words_df = calculate_frequency(train, 'fear', min_emotion_value, total_words_df)
+    total_words_df = calculate_frequency(train, 'sadness', min_emotion_value, total_words_df)
+    total_words_df = calculate_frequency(train, 'surprise', min_emotion_value, total_words_df)
+    total_words_df = calculate_frequency(train, 'trust', min_emotion_value, total_words_df)
 
     total_words_df.to_csv('words_list/words_list.csv')
     total_words_df.to_pickle('words_list/words_list.pkl')

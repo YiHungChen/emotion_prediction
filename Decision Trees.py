@@ -9,10 +9,14 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools
-
 import keras
 import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
+import datetime as dt
+time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
+
+from FE_NN import label_encode, label_decode, train_model, Model_score, DataLoader, DLProcess
+
 
 def plot_confusion_matrix(cm, classes, title='Confusion matrix',
                           cmap= sns.cubehelix_palette(as_cmap=True)):
@@ -37,50 +41,132 @@ def plot_confusion_matrix(cm, classes, title='Confusion matrix',
         plt.tight_layout()
         plt.show()
 
-# HSV feature with Decision Tree
 
-DS = pd.read_pickle('result_all.pkl')
-msk = np.random.rand(len(DS)) <= 0.8
+def load_train_data(num_data=None):
+    if not num_data:
+        DS = pd.read_pickle('train_processed-result/result.pkl')
+    else:
+        DS = pd.read_pickle('train_processed-result/result.pkl')[:num_data]
 
-train_df = DS[msk].reset_index(drop=True)
-test_df = DS[~msk].reset_index(drop=True)
+    msk = np.random.rand(len(DS)) <= 0.8
+
+    train_df = DS[msk].reset_index(drop=True)
+    test_df = DS[~msk].reset_index(drop=True)
+
+    # --- training data --- #
+    train_input = pd.DataFrame(train_df.score.to_list())
+    train_output = train_df.output
+
+    # --- test data --- #
+    test_input = pd.DataFrame(test_df.score.to_list())
+    test_output = test_df.output
+
+    print_data_shape(train_input, train_output, test_input, test_output)
+
+    return train_input, train_output, test_input, test_output
 
 
-# --- training data --- #
-train_input = pd.DataFrame(train_df.score.to_list())
-train_output = train_df.output
+def load_upload_data():
+    DS = pd.read_pickle('test-processed-result/result_test.pkl')
+    upload_input = pd.DataFrame(DS.score.to_list())
 
-# --- test data --- #
-test_input = pd.DataFrame(test_df.score.to_list())
-test_output = test_df.output
+    return DS, upload_input
 
-"""
-# --- print shape of the data --- #
-print(f'Training input shape: {train_input.shape}')
-print(f'Training output shape: {train_output.shape}')
-print(f'Testing input shape: {valid_input.shape}')
-print(f'Testing output shape: {valid_output.shape}')
 
-# --- build decision tree model --- #
-DT_model = DecisionTreeClassifier(random_state = 0)
+def print_data_shape(train_input, train_output, test_input, test_output):
+    print(f'Training input shape: {train_input.shape}')
+    print(f'Training output shape: {train_output.shape}')
+    print(f'Testing input shape: {test_input.shape}')
+    print(f'Testing output shape: {test_output.shape}')
+    pass
 
-# --- model training --- #
-DT_model = DT_model.fit(train_input, train_output)
 
-# --- predict --- #
-train_predict= DT_model.predict(train_input)
-test_predict = DT_model.predict(valid_input)
+def DT_model_func(train_input, train_output):
+    # --- build decision tree model --- #
+    DT_model = DecisionTreeClassifier(random_state=0)
 
-# --- show the prediction results --- #
-test_predict[:10]
+    # --- model training --- #
+    DT_model = DT_model.fit(train_input, train_output)
 
-train_acc = accuracy_score(y_true = train_output, y_pred = train_predict)
-test_acc = accuracy_score(y_true = valid_output, y_pred = test_predict)
+    return DT_model
 
-print(f'training accuracy: {train_acc:.2f}')
-print(f'testing accuracy: {test_acc:.2f}')
-print(classification_report(y_true= valid_output, y_pred=test_predict))
-"""
+
+def print_score(train_output, train_predict, test_output, test_predict):
+    train_acc = accuracy_score(y_true=train_output, y_pred=train_predict)
+    test_acc = accuracy_score(y_true=test_output, y_pred=test_predict)
+
+    print(f'training accuracy: {train_acc:.2f}')
+    print(f'testing accuracy: {test_acc:.2f}')
+    print(classification_report(y_true=test_output, y_pred=test_predict))
+    pass
+
+
+def output_result(upload_df, upload_predict):
+    upload_output = pd.DataFrame({'id': upload_df.id, 'emotion': upload_predict})
+    upload_output.to_csv(f'result/DT_result_{time_now}.csv', index=False)
+
+
+def Decision_tree():
+
+    # HSV feature with Decision Tree
+    train_input, train_output, test_input, test_output = load_train_data()
+
+    DT_model = DT_model_func(train_input, train_output)
+
+    # --- predict --- #
+    train_predict = DT_model.predict(train_input)
+    test_predict = DT_model.predict(test_input)
+
+    print_score(train_output, train_predict, test_output, test_predict)
+
+    upload_df, upload_input = load_upload_data()
+
+    upload_predict = DT_model.predict(upload_input)
+
+    output_result(upload_df, upload_predict)
+
+    pass
+
+
+def NN_score():
+    batch_size = 32
+
+    train_input, train_output, test_input, test_output = load_train_data()
+
+    label_encoder = LabelEncoder()
+    label_encoder.fit(train_output)
+
+    train_output = label_encode(label_encoder, train_output)
+    test_output = label_encode(label_encoder, test_output)
+
+    TORCH_DS_TRAIN = DLProcess(train_input.values, train_output)
+    TORCH_DS_TEST = DLProcess(test_input.values, test_output)
+
+    DL_DS_TRAIN = DataLoader(TORCH_DS_TRAIN, shuffle=True, batch_size=batch_size, drop_last=True)
+    DL_DS_TEST = DataLoader(TORCH_DS_TEST, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    num_inputs = train_input.shape[1]
+    MD = Model_score(num_inputs)
+
+    train_model(x_train=DL_DS_TRAIN,
+                x_test=DL_DS_TEST,
+                model=MD,
+                epoches=30000,
+                model_name=f'model/NN_score_{time_now}.pth')
+
+    pass
+
+if __name__ == '__main__':
+    NN_score()
+
+    # Decision_tree()
+
+
+    pass
+
+
+
+
 
 # BOW with pre-process feature goes to 0.29
 """
@@ -120,13 +206,13 @@ train_output = train_df.emotion
 # --- test Data --- #
 test_input = BOW_500.transform(test_df.lemmas)
 test_output = test_df.emotion
-"""
+
 # --- print shape of the data --- #
 print(f'Training input shape: {train_input.shape}')
 print(f'Training output shape: {train_output.shape}')
 print(f'Testing input shape: {test_input.shape}')
 print(f'Testing output shape: {test_output.shape}')
-
+"""
 """
 # --- build decision tree model --- #
 DT_model = DecisionTreeClassifier(random_state = 0)
@@ -150,6 +236,7 @@ print(f'testing accuracy: {test_acc:.2f}')
 print(classification_report(y_true= test_output, y_pred=test_predict))
 """
 
+"""
 label_encoder = LabelEncoder()
 label_encoder.fit(train_output)
 
@@ -266,3 +353,4 @@ upload_predict = model.predict(upload_input, batch_size=128)
 upload_predict = label_decode(label_encoder, upload_predict)
 upload_output = pd.DataFrame({'id':upload_df.id, 'emotion': upload_predict})
 upload_output.to_csv('results-DT-1223.csv', index=False)
+"""
