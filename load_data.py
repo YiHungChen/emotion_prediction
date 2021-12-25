@@ -49,7 +49,7 @@ def data_cleaning(x):
     return output
     pass
 
-tweets_text = tweets_text[:10]
+# tweets_text = tweets_text[:10]
 # tweets_text = tweets_text.apply(lambda x: data_cleaning(x))
 tweets_text = list(map(data_cleaning, tweets_text))
 # tweets_text.map(data_cleaning())
