@@ -30,3 +30,6 @@
 /result/
 *.csv
 *.pkl
+/.FE_NN.py.*
+/*/*.pkl
+/*/*.csv
