@@ -75,6 +75,6 @@ tweets_df = pd.merge(tweets_df, tweets_emotion, on=['id'])
 
 
 tweets_df.to_pickle('Dataset/DS_train.pkl')
-tweets_df.to_csv('DS_train.csv')
+# tweets_df.to_csv('DS_train.csv')
 
 print('Dataset/DS_train.pkl is saved !!!')

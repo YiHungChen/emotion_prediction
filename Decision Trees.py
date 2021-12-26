@@ -129,7 +129,7 @@ def Decision_tree():
 
 
 def NN_score():
-    batch_size = 32
+    batch_size = 128
 
     train_input, train_output, test_input, test_output = load_train_data()
 

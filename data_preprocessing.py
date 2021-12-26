@@ -146,8 +146,8 @@ def test_data():
 
 if __name__ == '__main__':
 
-    training_data()
+    # training_data()
 
-    # test_data()
+    test_data()
 
     pass

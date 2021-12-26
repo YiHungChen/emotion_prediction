@@ -148,7 +148,7 @@ def train_model(x_train, model, epoches, model_name, x_test=None):
     criterion = nn.MSELoss()
 
     # --- define the optimizer --- #
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
     # --- Enumerate epochs --- #
     for epoch in range(epoches):
@@ -173,6 +173,8 @@ def train_model(x_train, model, epoches, model_name, x_test=None):
         if x_test is not None:
 
             total_test_loss = 0
+            test_predict = []
+            test_answer = []
 
             for i, (inputs, targets) in enumerate(x_test):
                 with torch.no_grad():

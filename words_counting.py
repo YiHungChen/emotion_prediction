@@ -52,7 +52,7 @@ if __name__ == '__main__':
     emotion_value = train.groupby(['emotion']).count()['text']
     min_emotion_value = min(emotion_value)
     emotion_value = emotion_value.apply(lambda x: round(x * 100 / post_total, 3))
-
+    """
     # --- plot --- #
     figure, axis = plt.subplots()
     plt.bar(emotion_value.index, emotion_value.values)
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     plt.title('Emotion distribution')
     plt.grid(True)
     plt.show()
-
+    """
     # --- create total words list --- #
     BOW_vectorizer = CountVectorizer(stop_words='english')
     BOW_vectorizer.fit(train.lemmas)
