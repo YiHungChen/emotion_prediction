@@ -50,19 +50,27 @@ class Model_score(nn.Module):
     def __init__(self, features):
         super(Model_score, self).__init__()
         # --- input use the feactures to define -- #
-        self.nn1 = nn.Linear(features, 16).to(device)
-        kaiming_uniform_(self.nn1.weight, nonlinearity='selu')
-        self.nn2 = nn.Linear(16, 16).to(device)
-        kaiming_uniform_(self.nn2.weight, nonlinearity='selu')
-        self.nn3 = nn.Linear(16, 8).to(device)
-        kaiming_uniform_(self.nn3.weight, nonlinearity='selu')
+        self.nn1 = nn.Linear(features, 64).to(device)
+        # kaiming_uniform_(self.nn1.weight, nonlinearity='selu')
+        self.nn2 = nn.Linear(64, 32).to(device)
+        # kaiming_uniform_(self.nn2.weight, nonlinearity='selu')
+        self.nn3 = nn.Linear(32, 32).to(device)
+        # kaiming_uniform_(self.nn3.weight, nonlinearity='selu')
+        self.nn4 = nn.Linear(32, 8).to(device)
+        # kaiming_uniform_(self.nn4.weight, nonlinearity='selu')
+
+
 
         self.drop = nn.Dropout(p=0.2).to(device)
 
     def forward(self, x):
         x = self.nn1(x)
+        x = F.relu(x)
         x = self.nn2(x)
+        x = F.relu(x)
         x = self.nn3(x)
+        x = F.relu(x)
+        x = self.nn4(x)
         x = F.softmax(x, dim=1)
 
         return x
@@ -145,10 +153,10 @@ def train_model(x_train, model, epoches, model_name, x_test=None):
 
     # --- Define the optimization --- #
     #criterion = nn.MSELoss(reduction='mean')
-    criterion = nn.MSELoss()
+    # criterion = F.nll_loss()
 
     # --- define the optimizer --- #
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
     # --- Enumerate epochs --- #
     for epoch in range(epoches):
@@ -160,7 +168,7 @@ def train_model(x_train, model, epoches, model_name, x_test=None):
             optimizer.zero_grad()  # clear the gradients
             yhat = model(inputs.to(device)).to(device)  # compute the model output
             yhat = yhat.squeeze()  # squeeze the data from (1xa) to (a)
-            loss = criterion(yhat, targets.to(device)).to(device)  # calculate loss
+            loss = F.cross_entropy(yhat, targets.to(device)).to(device)  # calculate loss
             loss.backward()  # Credit assignment
             optimizer.step()  # update model weights
 
@@ -182,7 +190,7 @@ def train_model(x_train, model, epoches, model_name, x_test=None):
                     yhat = yhat.squeeze()
 
                     # --- Calculate loss --- #
-                    loss = criterion(yhat, targets.to(device)).to(device)
+                    loss = F.cross_entropy(yhat, targets.to(device)).to(device)
 
                     total_test_loss += loss
 

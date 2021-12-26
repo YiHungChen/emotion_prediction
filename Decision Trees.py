@@ -13,10 +13,12 @@ import keras
 import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 import datetime as dt
+import numpy
+import torch
+
 time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 
-from FE_NN import label_encode, label_decode, train_model, Model_score, DataLoader, DLProcess
-
+from FE_NN import label_encode, label_decode, train_model, Model_score, DataLoader, DLProcess, device
 
 def plot_confusion_matrix(cm, classes, title='Confusion matrix',
                           cmap= sns.cubehelix_palette(as_cmap=True)):
@@ -129,12 +131,13 @@ def Decision_tree():
 
 
 def NN_score():
-    batch_size = 32
+    batch_size = 128
 
     train_input, train_output, test_input, test_output = load_train_data()
 
     label_encoder = LabelEncoder()
     label_encoder.fit(train_output)
+    numpy.save('classes.npy', label_encoder.classes_)
 
     train_output = label_encode(label_encoder, train_output)
     test_output = label_encode(label_encoder, test_output)
@@ -156,8 +159,56 @@ def NN_score():
 
     pass
 
+
+# --- target the model --- #
+def target_model(test_dl, model):
+    predictions = list()
+    for i, (inputs, targets) in enumerate(test_dl):
+        # --- evaluate the model on the test set --- #
+        yhat = model(inputs.to(device))
+        # --- retrieve numpy array --- #
+        yhat_cpu = yhat.cpu()
+
+        yhat = yhat_cpu.detach().numpy()
+
+        yhat = yhat.reshape((len(yhat), 8))
+        # --- store --- #
+        predictions.append(yhat)
+        # id.append(targets)
+
+        print(f'\r {i/len(test_dl)*100:.1f}%', end="")
+    print()
+
+    predictions = np.vstack(predictions)
+    return predictions
+
+
+def NN_score_predict():
+    batch_size = 1
+
+    DS, upload_input = load_upload_data()
+    upload_output = [0] * len(upload_input)
+
+    label_encoder = LabelEncoder()
+    label_encoder.classes_ = numpy.load('classes.npy', allow_pickle=True)
+
+    TORCH_DS_UPLOAD = DLProcess(upload_input.values, upload_output)
+    DL_DS_UPLOAD = DataLoader(TORCH_DS_UPLOAD, shuffle=False, batch_size=1, drop_last=True)
+
+    MD = torch.load('model/NN_score_21-12-25_1408.pth')
+
+    predictions = target_model(DL_DS_UPLOAD, MD)
+
+    pred = label_decode(label_encoder, predictions)
+
+    output = pd.DataFrame({'id': DS.id, 'emotion': pred})
+    output.to_csv(f'result/results-Torch-NN-{time_now}.csv', index=False)
+
+
 if __name__ == '__main__':
     NN_score()
+
+    # NN_score_predict()
 
     # Decision_tree()
 
