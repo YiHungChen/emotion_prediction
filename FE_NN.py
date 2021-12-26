@@ -50,14 +50,15 @@ class Model_score(nn.Module):
     def __init__(self, features):
         super(Model_score, self).__init__()
         # --- input use the feactures to define -- #
-        self.nn1 = nn.Linear(features, 64).to(device)
+        self.nn1 = nn.Linear(features, 128).to(device)
         # kaiming_uniform_(self.nn1.weight, nonlinearity='selu')
-        self.nn2 = nn.Linear(64, 32).to(device)
+        self.nn2 = nn.Linear(128, 64).to(device)
         # kaiming_uniform_(self.nn2.weight, nonlinearity='selu')
-        self.nn3 = nn.Linear(32, 32).to(device)
+        self.nn3 = nn.Linear(64, 32).to(device)
         # kaiming_uniform_(self.nn3.weight, nonlinearity='selu')
-        self.nn4 = nn.Linear(32, 8).to(device)
+        self.nn4 = nn.Linear(32, 32).to(device)
         # kaiming_uniform_(self.nn4.weight, nonlinearity='selu')
+        self.nn5 = nn.Linear(32, 8).to(device)
 
 
 
@@ -65,12 +66,14 @@ class Model_score(nn.Module):
 
     def forward(self, x):
         x = self.nn1(x)
-        x = F.relu(x)
+        x = F.selu(x)
         x = self.nn2(x)
-        x = F.relu(x)
+        x = F.selu(x)
         x = self.nn3(x)
-        x = F.relu(x)
+        x = F.selu(x)
         x = self.nn4(x)
+        x = F.selu(x)
+        x = self.nn5(x)
         x = F.softmax(x, dim=1)
 
         return x
@@ -156,7 +159,7 @@ def train_model(x_train, model, epoches, model_name, x_test=None):
     # criterion = F.nll_loss()
 
     # --- define the optimizer --- #
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
     # --- Enumerate epochs --- #
     for epoch in range(epoches):

@@ -69,7 +69,7 @@ def load_train_data(num_data=None):
 
 
 def load_upload_data():
-    DS = pd.read_pickle('test-processed-result/result_test.pkl')
+    DS = pd.read_pickle('test_processed-result/result_test.pkl')
     upload_input = pd.DataFrame(DS.score.to_list())
 
     return DS, upload_input
@@ -195,7 +195,7 @@ def NN_score_predict():
     TORCH_DS_UPLOAD = DLProcess(upload_input.values, upload_output)
     DL_DS_UPLOAD = DataLoader(TORCH_DS_UPLOAD, shuffle=False, batch_size=1, drop_last=True)
 
-    MD = torch.load('model/NN_score_21-12-25_1408.pth')
+    MD = torch.load('model/NN_score_21-12-26_1619.pth')
 
     predictions = target_model(DL_DS_UPLOAD, MD)
 
