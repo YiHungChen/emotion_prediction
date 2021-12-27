@@ -40,9 +40,10 @@ def data_cleaning(x):
     x = x.replace('\'ll', " will")
     x = x.replace('_', " ")
 
-    x = re.sub('[0-9]', "", x)
+    # x = re.sub('[0-9]', "", x)
     x = re.sub(r'@\w+', "", x)
-    x = re.sub(r'#\w+', "", x)
+    # x = re.sub(r'#\w+', "", x)
+    x = re.sub(r'#', "", x)
     # x = re.sub("", "", x)
     # x = re.sub("", "", x)
     output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))
@@ -65,7 +66,7 @@ tweets_ident = tweets_ident.rename(columns={"tweet_id": "id"})
 
 tweets_df = pd.merge(tweets_df, tweets_ident, on=['id'])
 
-tweets_df.to_pickle('Dataset/DS.pkl')
+tweets_df.to_pickle('R:/DropBox/LAB_NEAF/CourseFile/PHD(VI fall)/Data Mining/emotion_prediction/Dataset/DS.pkl')
 print('Dataset/DS.pkl is saved !!!')
 
 tweets_emotion = pd.read_csv('dm2021-lab2-hw2/emotion.csv')
@@ -74,7 +75,7 @@ tweets_emotion = tweets_emotion.rename(columns={"tweet_id": "id"})
 tweets_df = pd.merge(tweets_df, tweets_emotion, on=['id'])
 
 
-tweets_df.to_pickle('Dataset/DS_train.pkl')
+tweets_df.to_pickle('R:/DropBox/LAB_NEAF/CourseFile/PHD(VI fall)/Data Mining/emotion_prediction/Dataset/DS_train.pkl')
 # tweets_df.to_csv('DS_train.csv')
 
 print('Dataset/DS_train.pkl is saved !!!')
