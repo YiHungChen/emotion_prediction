@@ -40,9 +40,10 @@ def data_cleaning(x):
     x = x.replace('\'ll', " will")
     x = x.replace('_', " ")
 
-    x = re.sub('[0-9]', "", x)
+    # x = re.sub('[0-9]', "", x)
     x = re.sub(r'@\w+', "", x)
-    x = re.sub(r'#\w+', "", x)
+    # x = re.sub(r'#\w+', "", x)
+    x = re.sub(r'#', "", x)
     # x = re.sub("", "", x)
     # x = re.sub("", "", x)
     output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))

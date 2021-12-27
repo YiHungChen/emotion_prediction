@@ -15,10 +15,17 @@ from sklearn.preprocessing import LabelEncoder
 import datetime as dt
 import numpy
 import torch
+from sklearn.linear_model import LogisticRegression
+
+from data_preprocessing import load_word_counter, load_word_list
 
 time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 
-from FE_NN import label_encode, label_decode, train_model, Model_score, DataLoader, DLProcess, device
+# MetalAM-970
+dataFolder = 'W:/DropBox/LAB_NEAF/CourseFile/PHD(VI fall)/Data Mining/emotion_prediction/'
+
+
+from FE_NN import label_encode, label_decode, train_model, Model_score, DataLoader, DLProcess, device, Model_BOW
 
 def plot_confusion_matrix(cm, classes, title='Confusion matrix',
                           cmap= sns.cubehelix_palette(as_cmap=True)):
@@ -44,11 +51,44 @@ def plot_confusion_matrix(cm, classes, title='Confusion matrix',
         plt.show()
 
 
+def load_train_data_BOW(num_data=None):
+    if not num_data:
+        #DS = pd.read_pickle('train_processed-result/result.pkl')
+        DS = pd.read_pickle(f'{dataFolder}Dataset/DS_train.pkl')[:num_data]
+    else:
+        DS = pd.read_pickle(f'{dataFolder}Dataset/DS_train.pkl')
+
+    msk = np.random.rand(len(DS)) <= 0.8
+
+    train_df = DS[msk].reset_index(drop=True)
+    test_df = DS[msk].reset_index(drop=True)
+
+    # --- training data --- #
+    train_input = train_df.lemmas
+    train_output = train_df.emotion
+
+    # --- test data --- #
+    test_input = test_df.lemmas
+    test_output = test_df.emotion
+
+    word_list_valid = load_word_list(thr_saturation=0, thr_intensity=0)
+    words_counter, analyze = load_word_counter(word_list_valid)
+
+    train_input = words_counter.transform(train_input)
+    test_input = words_counter.transform(test_input)
+
+
+    print_data_shape(train_input, train_output, test_input, test_output)
+
+    return train_input, train_output, test_input, test_output
+
+
 def load_train_data(num_data=None):
     if not num_data:
-        DS = pd.read_pickle('train_processed-result/result.pkl')
+        DS = pd.read_pickle(f'{dataFolder}train_processed-result/result.pkl')
+        # DS = pd.read_pickle('W:/DropBox/LAB_NEAF/CourseFile/PHD(VI fall)/DataMining/emotion_prediction/train_processed-result/result.pkl')
     else:
-        DS = pd.read_pickle('train_processed-result/result.pkl')[:num_data]
+        DS = pd.read_pickle(f'{dataFolder}train_processed-result/result.pkl')[:num_data]
 
     msk = np.random.rand(len(DS)) <= 0.8
 
@@ -67,9 +107,22 @@ def load_train_data(num_data=None):
 
     return train_input, train_output, test_input, test_output
 
+def load_upload_data_BOW():
+    DS = pd.read_pickle(f'{dataFolder}Dataset/DS.pkl')
+    upload_input = DS.loc[DS.identification=='test','lemmas']
+    DS = DS.loc[DS.identification=='test']
+
+    word_list_valid = load_word_list(thr_saturation=0, thr_intensity=0)
+    words_counter, analyze = load_word_counter(word_list_valid)
+
+    upload_input = words_counter.transform(upload_input)
+
+
+    return DS, upload_input
+
 
 def load_upload_data():
-    DS = pd.read_pickle('test_processed-result/result_test.pkl')
+    DS = pd.read_pickle(f'{dataFolder}test-processed-result/result_test.pkl')
     upload_input = pd.DataFrame(DS.score.to_list())
 
     return DS, upload_input
@@ -205,12 +258,99 @@ def NN_score_predict():
     output.to_csv(f'result/results-Torch-NN-{time_now}.csv', index=False)
 
 
+def NN_BOW():
+
+    batch_size = 128
+
+    train_input, train_output, test_input, test_output = load_train_data_BOW()
+
+    label_encoder = LabelEncoder()
+    label_encoder.fit(train_output)
+    numpy.save('classes.npy', label_encoder.classes_)
+
+    train_output = label_encode(label_encoder, train_output)
+    test_output = label_encode(label_encoder, test_output)
+
+    TORCH_DS_TRAIN = DLProcess(train_input.toarray(), train_output)
+    TORCH_DS_TEST = DLProcess(test_input.toarray(), test_output)
+
+    DL_DS_TRAIN = DataLoader(TORCH_DS_TRAIN, shuffle=True, batch_size=batch_size, drop_last=True)
+    DL_DS_TEST = DataLoader(TORCH_DS_TEST, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    num_inputs = train_input.shape[1]
+    MD = Model_score(num_inputs)
+
+    train_model(x_train=DL_DS_TRAIN,
+                x_test=DL_DS_TEST,
+                model=MD,
+                epoches=30000,
+                model_name=f'model/NN_BOW_{time_now}.pth')
+    pass
+
+def LG():
+    train_input, train_output, test_input, test_output = load_train_data()
+
+    label_encoder = LabelEncoder()
+    label_encoder.fit(train_output)
+    numpy.save('classes.npy', label_encoder.classes_)
+
+    lg = LogisticRegression(random_state=0).fit(train_input, train_output)
+    train_predict = lg.predict(train_input)
+    test_predict = lg.predict(test_input)
+
+
+    print_score(train_output, train_predict, test_output, test_predict)
+
+    upload_df, upload_input = load_upload_data()
+
+    upload_predict = lg.predict(upload_input)
+
+    output_result(upload_df, upload_predict)
+
+    pass
+
+
+def LG_BOW():
+    train_input, train_output, test_input, test_output = load_train_data_BOW()
+
+    label_encoder = LabelEncoder()
+    label_encoder.fit(train_output)
+    numpy.save('classes.npy', label_encoder.classes_)
+
+    lg = LogisticRegression(C=6, n_jobs=-1, max_iter=1000).fit(train_input, train_output)
+    train_predict = lg.predict(train_input)
+    test_predict = lg.predict(test_input)
+
+
+    print_score(train_output, train_predict, test_output, test_predict)
+
+    upload_df, upload_input = load_upload_data_BOW()
+
+    upload_predict = lg.predict(upload_input)
+
+    output_result(upload_df, upload_predict)
+
+    pass
+
+
+
+
+    pass
+
+
+
 if __name__ == '__main__':
-    NN_score()
+    # NN_score()
 
     # NN_score_predict()
 
     # Decision_tree()
+
+    # NN_BOW()
+
+    # LG()
+
+    LG_BOW()
 
 
     pass
