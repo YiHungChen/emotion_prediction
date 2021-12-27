@@ -15,6 +15,7 @@ from sklearn.preprocessing import LabelEncoder
 import datetime as dt
 import numpy
 import torch
+from hsv_convert import normalization
 
 time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 
@@ -135,9 +136,14 @@ def NN_score():
 
     train_input, train_output, test_input, test_output = load_train_data()
 
+    train_input = normalization(train_input)
+
+    test_input = normalization(test_input)
+
     label_encoder = LabelEncoder()
-    label_encoder.fit(train_output)
-    numpy.save('classes.npy', label_encoder.classes_)
+    label_encoder.classes_ = numpy.load('classes.npy', allow_pickle=True)
+    # label_encoder.fit(train_output)
+    # numpy.save('classes.npy', label_encoder.classes_)
 
     train_output = label_encode(label_encoder, train_output)
     test_output = label_encode(label_encoder, test_output)

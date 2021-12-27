@@ -1,8 +1,6 @@
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 import time
-import numpy as np
-import nltk
 
 
 def unique_list(l):
@@ -74,6 +72,7 @@ def score_calculation(train_df, words_list_valid):
         train_sentence = train_sentence.mul(train_saturation, axis=0)
 
         score = train_sentence.sum(axis=0)
+        score = normalization(score)
 
         # print(score)
 
@@ -106,6 +105,15 @@ def score_calculation(train_df, words_list_valid):
     return output
 
     pass
+
+def normalization(df):
+
+    a = df.loc['anger':'trust']
+    b = a.max()
+    c = a.min()
+    d = (a-c)/(b-c)
+    df.loc['anger':'trust'] = d
+    return df
 
 
 def training_data():
