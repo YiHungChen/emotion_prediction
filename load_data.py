@@ -5,13 +5,10 @@ This file is for the loading of the emotion data from the kaggle
 import json
 import pandas as pd
 import re
-import csv
-import numpy as np
 from lemmatization import lemmas_words
-import time
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 from tqdm import tqdm
-import multiprocessing
+from folder_path import folder_path
 
 tweets_df = pd.DataFrame()
 
@@ -66,8 +63,8 @@ tweets_ident = tweets_ident.rename(columns={"tweet_id": "id"})
 
 tweets_df = pd.merge(tweets_df, tweets_ident, on=['id'])
 
-tweets_df.to_pickle('R:/DropBox/LAB_NEAF/CourseFile/PHD(VI fall)/Data Mining/emotion_prediction/Dataset/DS.pkl')
-print('Dataset/DS.pkl is saved !!!')
+tweets_df.to_pickle(f'{folder_path}Dataset/DS.pkl')
+print(f'{folder_path}Dataset/DS.pkl is saved !!!')
 
 tweets_emotion = pd.read_csv('dm2021-lab2-hw2/emotion.csv')
 tweets_emotion = tweets_emotion.rename(columns={"tweet_id": "id"})
@@ -75,7 +72,7 @@ tweets_emotion = tweets_emotion.rename(columns={"tweet_id": "id"})
 tweets_df = pd.merge(tweets_df, tweets_emotion, on=['id'])
 
 
-tweets_df.to_pickle('R:/DropBox/LAB_NEAF/CourseFile/PHD(VI fall)/Data Mining/emotion_prediction/Dataset/DS_train.pkl')
+tweets_df.to_pickle(f'{folder_path}Dataset/DS_train.pkl')
 # tweets_df.to_csv('DS_train.csv')
 
-print('Dataset/DS_train.pkl is saved !!!')
+print(f'{folder_path}Dataset/DS_train.pkl is saved !!!')

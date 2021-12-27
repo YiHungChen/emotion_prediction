@@ -4,12 +4,10 @@ separated in this program
 """
 
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
-import nltk
-from lemmatization import lemmas_sentence
-from nltk.tokenize.treebank import TreebankWordDetokenizer
+from folder_path import folder_path
+
 
 def myRange(start,end,step):
     i = start
@@ -45,25 +43,14 @@ def calculate_frequency(train, emotion, min_emotion_value, total_words_df):
 # --- main --- #
 if __name__ == '__main__':
     # --- load dataset --- #
-    train = pd.read_pickle('Dataset/DS_train.pkl')
+    train = pd.read_pickle(f'{folder_path}Dataset/DS_train.pkl')
 
     # --- calculate the histogram --- #
     post_total = len(train)
     emotion_value = train.groupby(['emotion']).count()['text']
     min_emotion_value = min(emotion_value)
     emotion_value = emotion_value.apply(lambda x: round(x * 100 / post_total, 3))
-    """
-    # --- plot --- #
-    figure, axis = plt.subplots()
-    plt.bar(emotion_value.index, emotion_value.values)
 
-    # --- rearrange labels --- #
-    plt.ylabel('% of instances')
-    plt.xlabel('Emotion')
-    plt.title('Emotion distribution')
-    plt.grid(True)
-    plt.show()
-    """
     # --- create total words list --- #
     BOW_vectorizer = CountVectorizer(stop_words='english')
     BOW_vectorizer.fit(train.lemmas)
@@ -83,7 +70,7 @@ if __name__ == '__main__':
     total_words_df = calculate_frequency(train, 'surprise', min_emotion_value, total_words_df)
     total_words_df = calculate_frequency(train, 'trust', min_emotion_value, total_words_df)
 
-    total_words_df.to_csv('words_list/words_list.csv')
-    total_words_df.to_pickle('words_list/words_list.pkl')
+    total_words_df.to_csv(f'{folder_path}words_list/words_list.csv')
+    total_words_df.to_pickle(f'{folder_path}words_list/words_list.pkl')
 
     pass
