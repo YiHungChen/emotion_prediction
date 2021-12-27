@@ -2,9 +2,11 @@ from nltk import word_tokenize, pos_tag
 from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
 import nltk
+from autocorrect import Speller
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
+spell = Speller()
 
 
 def get_wordnet_pos(tag):
@@ -24,6 +26,7 @@ def lemmas_sentence(words_list):
     output = []
     for index, sentence in enumerate(words_list):
         tokens = word_tokenize(sentence)
+        tokens = [spell(x) for x in tokens]
         tagged_sent = pos_tag(tokens)
         wnl = WordNetLemmatizer()
         lemmas_sent = []

@@ -5,13 +5,10 @@ This file is for the loading of the emotion data from the kaggle
 import json
 import pandas as pd
 import re
-import csv
-import numpy as np
 from lemmatization import lemmas_words
-import time
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 from tqdm import tqdm
-import multiprocessing
+from folder_path import folder_path
 
 tweets_df = pd.DataFrame()
 
@@ -31,21 +28,17 @@ output = []
 
 
 def data_cleaning(x):
-    x = x.replace("<LH>", "")
-    x = x.replace('\'s', " is")
-    x = x.replace('\'ve', " have")
-    x = x.replace('n\'t', " not")
-    x = x.replace('\'re', " are")
-    x = x.replace('\'m', " am")
-    x = x.replace('\'ll', " will")
-    x = x.replace('_', " ")
-
-    # x = re.sub('[0-9]', "", x)
+    x = re.sub("<LH>", "", x)
+    x = re.sub('\'s', " is", x)
+    x = re.sub('\'ve', " have", x)
+    x = re.sub('n\'t', " not", x)
+    x = re.sub('\'re', " are", x)
+    x = re.sub('\'m', " am", x)
+    x = re.sub('_', " ", x)
+    x = re.sub(r'\'ll', "will", x)
     x = re.sub(r'@\w+', "", x)
-    # x = re.sub(r'#\w+', "", x)
     x = re.sub(r'#', "", x)
-    # x = re.sub("", "", x)
-    # x = re.sub("", "", x)
+
     output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))
     return output
 
@@ -66,8 +59,8 @@ tweets_ident = tweets_ident.rename(columns={"tweet_id": "id"})
 
 tweets_df = pd.merge(tweets_df, tweets_ident, on=['id'])
 
-tweets_df.to_pickle('Dataset/DS.pkl')
-print('Dataset/DS.pkl is saved !!!')
+tweets_df.to_pickle(f'{folder_path}Dataset/DS.pkl')
+print(f'{folder_path}Dataset/DS.pkl is saved !!!')
 
 tweets_emotion = pd.read_csv('dm2021-lab2-hw2/emotion.csv')
 tweets_emotion = tweets_emotion.rename(columns={"tweet_id": "id"})
@@ -75,7 +68,7 @@ tweets_emotion = tweets_emotion.rename(columns={"tweet_id": "id"})
 tweets_df = pd.merge(tweets_df, tweets_emotion, on=['id'])
 
 
-tweets_df.to_pickle('Dataset/DS_train.pkl')
+tweets_df.to_pickle(f'{folder_path}Dataset/DS_train.pkl')
 # tweets_df.to_csv('DS_train.csv')
 
-print('Dataset/DS_train.pkl is saved !!!')
+print(f'{folder_path}Dataset/DS_train.pkl is saved !!!')
