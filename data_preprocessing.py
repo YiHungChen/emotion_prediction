@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 import time
+from folder_path import folder_path
 
 
 def unique_list(l):
@@ -12,9 +13,9 @@ def unique_list(l):
 def load_data(num_data=0):
     # dataset_df = pd.read_pickle('Dataset/DS_train.pkl').sample(n=100000).reset_index(drop=True)
     if not num_data:
-        dataset_df = pd.read_pickle('Dataset/DS_train.pkl')
+        dataset_df = pd.read_pickle(f'{folder_path}Dataset/DS_train.pkl')
     else:
-        dataset_df = pd.read_pickle('Dataset/DS_train.pkl')[:num_data]
+        dataset_df = pd.read_pickle(f'{folder_path}Dataset/DS_train.pkl')[:num_data]
 
     train_df = dataset_df
 
@@ -24,7 +25,7 @@ def load_data(num_data=0):
 def load_data_test():
     # dataset_df = pd.read_pickle('Dataset/DS_train.pkl').sample(n=100000).reset_index(drop=True)
 
-    dataset_df = pd.read_pickle('Dataset/DS.pkl')
+    dataset_df = pd.read_pickle(f'{folder_path}Dataset/DS.pkl')
     dataset_df = dataset_df.loc[dataset_df.identification == 'test'].reset_index(drop=True)
 
     test_df = dataset_df
@@ -32,7 +33,7 @@ def load_data_test():
 
 
 def load_word_list(thr_saturation=0, thr_intensity=0):
-    words_list = pd.read_pickle('hsv/hsv_list_spe.pkl')
+    words_list = pd.read_pickle(f'{folder_path}hsv/hsv_list_spe.pkl')
     words_list_valid = words_list
     words_list_valid = words_list.loc[words_list.saturation >= thr_saturation]
     words_list_valid = words_list_valid.loc[words_list_valid.intensity >= thr_intensity]
@@ -121,7 +122,7 @@ def training_data():
     train_df = load_data()
 
     # --- load word list --- #
-    words_list_valid = load_word_list(thr_saturation=0, thr_intensity=8)
+    words_list_valid = load_word_list(thr_saturation=0.5, thr_intensity=0)
 
 
 
@@ -148,14 +149,14 @@ def test_data():
     output = score_calculation(test_df, words_list_valid)
 
     # --- output file --- #
-    output.to_csv('result_test.csv')
-    output.to_pickle('result_test.pkl')
+    output.to_csv(f'{folder_path}result_test.csv')
+    output.to_pickle(f'{folder_path}result_test.pkl')
 
 
 if __name__ == '__main__':
 
-    # training_data()
+    training_data()
 
-    test_data()
+    # test_data()
 
     pass

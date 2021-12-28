@@ -3,9 +3,9 @@ from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
 import nltk
 from autocorrect import Speller
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('wordnet')
+# nltk.download('punkt')
+# nltk.download('averaged_perceptron_tagger')
+# nltk.download('wordnet')
 spell = Speller()
 
 

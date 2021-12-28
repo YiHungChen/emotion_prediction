@@ -49,17 +49,15 @@ class Model_BOW(nn.Module):
     def __init__(self, features):
         super(Model_score, self).__init__()
         # --- input use the feactures to define -- #
-        self.nn1 = nn.Linear(features, 1024).to(device)
+        self.nn1 = nn.Linear(features, 256).to(device)
         # kaiming_uniform_(self.nn1.weight, nonlinearity='selu')
-        self.nn2 = nn.Linear(1024, 512).to(device)
+        self.nn2 = nn.Linear(256, 64).to(device)
         # kaiming_uniform_(self.nn2.weight, nonlinearity='selu')
-        self.nn3 = nn.Linear(512, 256).to(device)
+        self.nn3 = nn.Linear(64, 32).to(device)
         # kaiming_uniform_(self.nn3.weight, nonlinearity='selu')
-        self.nn4 = nn.Linear(256, 128).to(device)
+        self.nn4 = nn.Linear(32, 16).to(device)
         # kaiming_uniform_(self.nn4.weight, nonlinearity='selu')
-        self.nn5 = nn.Linear(128, 64).to(device)
-        self.nn6 = nn.Linear(64, 32).to(device)
-        self.nn7 = nn.Linear(32, 8).to(device)
+        self.nn5 = nn.Linear(16, 8).to(device)
 
 
 
@@ -68,19 +66,16 @@ class Model_BOW(nn.Module):
 
     def forward(self, x):
         x = self.nn1(x)
-        x = F.selu(x)
+        x = F.relu(x)
         x = self.nn2(x)
-        x = F.selu(x)
+        x = F.relu(x)
         x = self.nn3(x)
-        x = F.selu(x)
+        x = F.relu(x)
         x = self.nn4(x)
-        x = F.selu(x)
+        x = F.relu(x)
         x = self.nn5(x)
-        x = F.selu(x)
-        x = self.nn6(x)
-        x = F.selu(x)
-        x = self.nn7(x)
-        x = F.softmax(x, dim=1)
+
+        x = F.log_softmax(x, dim=1)
 
         return x
 
@@ -266,7 +261,7 @@ def train_model(x_train, model, epoches, model_name, x_test=None):
 
 class DLProcess(Dataset):
     def __init__(self, value_data_input, value_data_output):
-        self.torch_data_input = torch.tensor(value_data_input, dtype=torch.float32)
+        self.torch_data_input = value_data_input
         self.torch_data_output = torch.tensor(value_data_output, dtype=torch.float32)
 
         self.len = value_data_input.shape[0]

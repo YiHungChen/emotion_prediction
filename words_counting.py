@@ -24,7 +24,7 @@ def calculate_frequency(train, emotion, min_emotion_value, total_words_df):
     last_batch = 0
     for i in myRange(min_emotion_value, num_emotion, min_emotion_value):
         rest = min_emotion_value - (i - last_batch)
-        emotion_df = train.loc[train.emotion == emotion][last_batch: i]
+        emotion_df = train.loc[train.emotion == emotion].sample(n=min_emotion_value)
         if rest:
             emotion_df = emotion_df.append(train.loc[train.emotion == emotion][0:last_batch].sample(n=rest))
             pass

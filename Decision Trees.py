@@ -13,9 +13,17 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import BernoulliNB
+
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
 
 from data_preprocessing import load_word_counter, load_word_list
 from folder_path import folder_path
+
+from keras.models import Model
+from keras.layers import Input, Dense, ReLU, Softmax
+import tensorflow as tf
 
 time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 
@@ -23,6 +31,7 @@ time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 dataFolder = folder_path
 
 from FE_NN import label_encode, label_decode, train_model, Model_score, DataLoader, DLProcess, device
+import os
 
 
 def plot_confusion_matrix(cm, classes, title='Confusion matrix',
@@ -51,7 +60,7 @@ def plot_confusion_matrix(cm, classes, title='Confusion matrix',
 
 
 def load_train_data_BOW(num_data=None):
-    if not num_data:
+    if num_data:
         # DS = pd.read_pickle('train_processed-result/result.pkl')
         DS = pd.read_pickle(f'{dataFolder}Dataset/DS_train.pkl')[:num_data]
     else:
@@ -60,7 +69,7 @@ def load_train_data_BOW(num_data=None):
     msk = np.random.rand(len(DS)) <= 0.8
 
     train_df = DS[msk].reset_index(drop=True)
-    test_df = DS[msk].reset_index(drop=True)
+    test_df = DS[~msk].reset_index(drop=True)
 
     # --- training data --- #
     train_input = train_df.lemmas
@@ -155,7 +164,7 @@ def print_score(train_output, train_predict, test_output, test_predict):
 
 def output_result(upload_df, upload_predict):
     upload_output = pd.DataFrame({'id': upload_df.id, 'emotion': upload_predict})
-    upload_output.to_csv(f'result/DT_result_{time_now}.csv', index=False)
+    upload_output.to_csv(f'{folder_path}result/DT_result_{time_now}.csv', index=False)
 
 
 def Decision_tree():
@@ -178,9 +187,72 @@ def Decision_tree():
 
     pass
 
+def NB_score ():
+    train_input, train_output, test_input, test_output = load_train_data()
+
+    bnb = BernoulliNB(binarize=0.0)
+    bnb.fit(train_input, train_output)
+
+    # --- predict --- #
+    train_predict = bnb.predict(train_input)
+    test_predict = bnb.predict(test_input)
+
+    print_score(train_output, train_predict, test_output, test_predict)
+
+    upload_df, upload_input = load_upload_data()
+
+    upload_predict = bnb.predict(upload_input)
+
+    output_result(upload_df, upload_predict)
+
+    pass
+
+
+def NB_BOW ():
+    train_input, train_output, test_input, test_output = load_train_data_BOW()
+
+    bnb = BernoulliNB(binarize=0.99)
+    bnb.fit(train_input, train_output)
+
+    # --- predict --- #
+    train_predict = bnb.predict(train_input)
+    test_predict = bnb.predict(test_input)
+
+    print_score(train_output, train_predict, test_output, test_predict)
+
+    upload_df, upload_input = load_upload_data_BOW()
+
+    upload_predict = bnb.predict(upload_input)
+
+    output_result(upload_df, upload_predict)
+
+    pass
+
+def GPR_BOW ():
+    train_input, train_output, test_input, test_output = load_train_data_BOW()
+
+    kernel = DotProduct() + WhiteKernel()
+
+    GPR = GaussianProcessRegressor()
+    GPR.fit(train_input, train_output)
+
+    # --- predict --- #
+    train_predict = GPR.predict(train_input)
+    test_predict = GPR.predict(test_input)
+
+    print_score(train_output, train_predict, test_output, test_predict)
+
+    upload_df, upload_input = load_upload_data_BOW()
+
+    upload_predict = GPR.predict(upload_input)
+
+    output_result(upload_df, upload_predict)
+
+    pass
+
 
 def NN_score():
-    batch_size = 128
+    batch_size = 32
 
     train_input, train_output, test_input, test_output = load_train_data()
 
@@ -204,7 +276,7 @@ def NN_score():
                 x_test=DL_DS_TEST,
                 model=MD,
                 epoches=30000,
-                model_name=f'model/NN_score_{time_now}.pth')
+                model_name=f'{folder_path}model/NN_score_{time_now}.pth')
 
     pass
 
@@ -251,11 +323,11 @@ def NN_score_predict():
     pred = label_decode(label_encoder, predictions)
 
     output = pd.DataFrame({'id': DS.id, 'emotion': pred})
-    output.to_csv(f'result/results-Torch-NN-{time_now}.csv', index=False)
+    output.to_csv(f'{folder_path}result/results-Torch-NN-{time_now}.csv', index=False)
 
 
 def NN_BOW():
-    batch_size = 128
+    batch_size = 32
 
     train_input, train_output, test_input, test_output = load_train_data_BOW()
 
@@ -266,8 +338,8 @@ def NN_BOW():
     train_output = label_encode(label_encoder, train_output)
     test_output = label_encode(label_encoder, test_output)
 
-    TORCH_DS_TRAIN = DLProcess(train_input.toarray(), train_output)
-    TORCH_DS_TEST = DLProcess(test_input.toarray(), test_output)
+    TORCH_DS_TRAIN = DLProcess(train_input, train_output)
+    TORCH_DS_TEST = DLProcess(test_input, test_output)
 
     DL_DS_TRAIN = DataLoader(TORCH_DS_TRAIN, shuffle=True, batch_size=batch_size, drop_last=True)
     DL_DS_TEST = DataLoader(TORCH_DS_TEST, shuffle=True, batch_size=batch_size, drop_last=True)
@@ -312,7 +384,7 @@ def LG_BOW():
     label_encoder.fit(train_output)
     numpy.save('classes.npy', label_encoder.classes_)
 
-    lg = LogisticRegression(C=1000, n_jobs=-1, max_iter=1000).fit(train_input, train_output)
+    lg = LogisticRegression(C=1, n_jobs=-1, max_iter=100).fit(train_input, train_output)
     train_predict = lg.predict(train_input)
     test_predict = lg.predict(test_input)
 
@@ -320,7 +392,7 @@ def LG_BOW():
     logreg = LogisticRegression()
     logreg_cv = GridSearchCV(logreg, grid, cv=10, scoring="f1_micro")
     logreg_cv.fit(train_input, train_output)
-
+    
     print("tuned hpyerparameters :(best parameters) ", logreg_cv.best_params_)
     print("accuracy :", logreg_cv.best_score_)
     print('extimator: ', logreg_cv.best_estimator_)
@@ -337,6 +409,74 @@ def LG_BOW():
 
     pass
 
+def NN_BOW_keras():
+    batch_size = 32
+
+    train_input, train_output, test_input, test_output = load_train_data_BOW()
+
+    label_encoder = LabelEncoder()
+    label_encoder.classes_ = numpy.load('classes.npy', allow_pickle=True)
+
+    train_output = label_encode(label_encoder, train_output)
+    test_output = label_encode(label_encoder, test_output)
+
+    input_shape = train_input.shape[1]
+    output_shape = train_output.shape[1]
+
+    # --- input layer --- #
+    model_input = Input(shape=(input_shape,))
+    X = model_input
+
+    # --- 1st hidden layer --- #
+    X_W1 = Dense(units=64)(X)
+    H1 = ReLU()(X_W1)
+
+    # --- 2nd hidden layer --- #
+    H1_W2 = Dense(units=64)(H1)
+    H2 = ReLU()(H1_W2)
+
+    # --- output layer --- #
+    H2_W3 = Dense(units=output_shape)(H2)
+    H3 = Softmax()(H2_W3)
+
+    model_output = H3
+
+    # --- create model --- #
+    model = Model(inputs=[model_input], outputs=[model_output])
+
+    checkpoint_path = f"{dataFolder}model/model_{time_now}.hdf5"
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+
+    # Create a callback that saves the model's weights
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                     save_best_only=True,
+                                                     verbose=1,
+                                                     mode='auto',
+                                                     save_freq=1,
+                                                     monitor='loss')
+
+    logdir = os.path.join("logs", time_now)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+
+    # --- loss function & optimizer --- #
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    # --- show model construction --- #
+    model.summary()
+
+    # --- training setting --- #
+    epochs = 1000
+    batch_szie = 128
+
+    # --- training process --- #
+    history = model.fit(train_input, train_output,
+                        epochs=epochs,
+                        batch_size=batch_szie,
+                        validation_data=[test_input, test_output],
+                        callbacks=[cp_callback])
+
 
 if __name__ == '__main__':
     # NN_score()
@@ -349,6 +489,13 @@ if __name__ == '__main__':
 
     # LG()
 
-    LG_BOW()
+    # LG_BOW()
+
+    # NB_score()
+
+    # NB_BOW()
+
+    NN_BOW_keras()
+
 
     pass
