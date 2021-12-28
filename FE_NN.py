@@ -21,6 +21,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 import keras
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
 time_now = dt.datetime.now().strftime("%Y%m%d")
 
 # --- end of libraries --- #
@@ -47,7 +48,7 @@ def label_decode(le, one_hot_label):
 
 class Model_BOW(nn.Module):
     def __init__(self, features):
-        super(Model_score, self).__init__()
+        super(Model_BOW, self).__init__()
         # --- input use the feactures to define -- #
         self.nn1 = nn.Linear(features, 256).to(device)
         # kaiming_uniform_(self.nn1.weight, nonlinearity='selu')
@@ -261,7 +262,7 @@ def train_model(x_train, model, epoches, model_name, x_test=None):
 
 class DLProcess(Dataset):
     def __init__(self, value_data_input, value_data_output):
-        self.torch_data_input = value_data_input
+        self.torch_data_input = torch.tensor(value_data_input, dtype=torch.float32)
         self.torch_data_output = torch.tensor(value_data_output, dtype=torch.float32)
 
         self.len = value_data_input.shape[0]

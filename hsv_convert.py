@@ -17,7 +17,7 @@ if __name__ == '__main__':
     word_list_df['intensity'] = word_list_df.loc[:, 'anger':'trust'].max(axis=1, numeric_only=True)
     word_list_df['max'] = word_list_df.loc[:, 'anger':'trust'].max(axis=1, numeric_only=True)
 
-    word_list_df['3rd_max'] = word_list_df.loc[:, 'anger':'trust'].apply(lambda row: row.nlargest(4).values[-1], axis=1)
+    word_list_df['3rd_max'] = word_list_df.loc[:, 'anger':'trust'].apply(lambda row: row.nlargest(2).values[-1], axis=1)
     word_list_df['saturation'] = ((word_list_df['max'] - word_list_df['3rd_max']) / word_list_df['max'])
 
     word_list_df = normalization(word_list_df)

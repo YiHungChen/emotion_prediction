@@ -21,16 +21,21 @@ from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
 from data_preprocessing import load_word_counter, load_word_list
 from folder_path import folder_path
 
-from keras.models import Model
+from keras.models import Model, Sequential
 from keras.layers import Input, Dense, ReLU, Softmax
+from keras.layers.core import Dense, Dropout, Activation, Flatten
+from keras.layers.embeddings import Embedding
 import tensorflow as tf
+
+from keras.preprocessing import sequence
+from keras.preprocessing.text import Tokenizer
 
 time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 
 # MetalAM-970
 dataFolder = folder_path
 
-from FE_NN import label_encode, label_decode, train_model, Model_score, DataLoader, DLProcess, device
+from FE_NN import label_encode, label_decode, train_model, Model_score, DataLoader, DLProcess, device, Model_BOW
 import os
 
 
@@ -57,6 +62,29 @@ def plot_confusion_matrix(cm, classes, title='Confusion matrix',
         plt.ylim([ylim_top, -.5])
         plt.tight_layout()
         plt.show()
+
+
+def load_train_data_pure(num_data=None):
+    if num_data:
+        # DS = pd.read_pickle('train_processed-result/result.pkl')
+        DS = pd.read_pickle(f'{dataFolder}Dataset/DS_train.pkl')[:num_data]
+    else:
+        DS = pd.read_pickle(f'{dataFolder}Dataset/DS_train.pkl')
+
+    msk = np.random.rand(len(DS)) <= 0.8
+
+    train_df = DS[msk].reset_index(drop=True)
+    test_df = DS[~msk].reset_index(drop=True)
+
+    # --- training data --- #
+    train_input = train_df.lemmas
+    train_output = train_df.emotion
+
+    # --- test data --- #
+    test_input = test_df.lemmas
+    test_output = test_df.emotion
+
+    return train_input, train_output, test_input, test_output
 
 
 def load_train_data_BOW(num_data=None):
@@ -329,7 +357,7 @@ def NN_score_predict():
 def NN_BOW():
     batch_size = 32
 
-    train_input, train_output, test_input, test_output = load_train_data_BOW()
+    train_input, train_output, test_input, test_output = load_train_data_BOW(5000)
 
     label_encoder = LabelEncoder()
     label_encoder.fit(train_output)
@@ -338,14 +366,14 @@ def NN_BOW():
     train_output = label_encode(label_encoder, train_output)
     test_output = label_encode(label_encoder, test_output)
 
-    TORCH_DS_TRAIN = DLProcess(train_input, train_output)
-    TORCH_DS_TEST = DLProcess(test_input, test_output)
+    TORCH_DS_TRAIN = DLProcess(train_input.toarray(), train_output)
+    TORCH_DS_TEST = DLProcess(test_input.toarray(), test_output)
 
     DL_DS_TRAIN = DataLoader(TORCH_DS_TRAIN, shuffle=True, batch_size=batch_size, drop_last=True)
     DL_DS_TEST = DataLoader(TORCH_DS_TEST, shuffle=True, batch_size=batch_size, drop_last=True)
 
     num_inputs = train_input.shape[1]
-    MD = Model_score(num_inputs)
+    MD = Model_BOW(num_inputs)
 
     train_model(x_train=DL_DS_TRAIN,
                 x_test=DL_DS_TEST,
@@ -392,7 +420,7 @@ def LG_BOW():
     logreg = LogisticRegression()
     logreg_cv = GridSearchCV(logreg, grid, cv=10, scoring="f1_micro")
     logreg_cv.fit(train_input, train_output)
-    
+
     print("tuned hpyerparameters :(best parameters) ", logreg_cv.best_params_)
     print("accuracy :", logreg_cv.best_score_)
     print('extimator: ', logreg_cv.best_estimator_)
@@ -428,18 +456,18 @@ def NN_BOW_keras():
     X = model_input
 
     # --- 1st hidden layer --- #
-    X_W1 = Dense(units=64)(X)
-    H1 = ReLU()(X_W1)
+    X = Dense(units=64)(X)
+    X = ReLU()(X)
 
     # --- 2nd hidden layer --- #
-    H1_W2 = Dense(units=64)(H1)
-    H2 = ReLU()(H1_W2)
+    X = Dense(units=32)(X)
+    X = ReLU()(X)
 
     # --- output layer --- #
-    H2_W3 = Dense(units=output_shape)(H2)
-    H3 = Softmax()(H2_W3)
+    X = Dense(units=output_shape)(X)
+    X = Softmax()(X)
 
-    model_output = H3
+    model_output = X
 
     # --- create model --- #
     model = Model(inputs=[model_input], outputs=[model_output])
@@ -452,7 +480,7 @@ def NN_BOW_keras():
                                                      save_best_only=True,
                                                      verbose=1,
                                                      mode='auto',
-                                                     save_freq=1,
+                                                     period=1,
                                                      monitor='loss')
 
     logdir = os.path.join("logs", time_now)
@@ -477,6 +505,50 @@ def NN_BOW_keras():
                         validation_data=[test_input, test_output],
                         callbacks=[cp_callback])
 
+def LSTM():
+    train_input, train_output, test_input, test_output = load_train_data_pure()
+
+
+    words_lists_valid = load_word_list(thr_saturation=0, thr_intensity=0)
+    token = Tokenizer()
+    token.fit_on_texts(words_lists_valid.words)
+
+    train_input_seq = token.texts_to_sequences(train_input)
+    test_input_seq = token.texts_to_sequences(test_input)
+
+    train_input = sequence.pad_sequences(train_input_seq, maxlen=30)
+    test_input = sequence.pad_sequences(test_input_seq, maxlen=30)
+
+    label_encoder = LabelEncoder()
+    label_encoder.classes_ = numpy.load('classes.npy', allow_pickle=True)
+
+    train_output = label_encode(label_encoder, train_output)
+    test_output = label_encode(label_encoder, test_output)
+
+    model = Sequential()
+    model.add(Embedding(output_dim=32,
+                        input_dim=len(token.word_index),
+                        input_length=30))
+    model.add(Dropout(0.2))
+    model.add(Flatten())
+    model.add(Dense(units=256,
+                    activation='relu'))
+    model.add(Dropout(0.35))
+    model.add(Dense(units=8,
+                    activation='softmax'))
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    history = model.fit(train_input, train_output,
+                        epochs=1000,
+                        batch_size=32,
+                        validation_data=[test_input, test_output])
+
+
+
+    pass
+
 
 if __name__ == '__main__':
     # NN_score()
@@ -495,7 +567,8 @@ if __name__ == '__main__':
 
     # NB_BOW()
 
-    NN_BOW_keras()
+    # NN_BOW_keras()
 
+    LSTM()
 
     pass
