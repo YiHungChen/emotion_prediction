@@ -29,7 +29,7 @@ import tensorflow as tf
 
 from keras.preprocessing import sequence
 from keras.preprocessing.text import Tokenizer
-
+from keras.layers.recurrent import LSTM
 time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 
 # MetalAM-970
@@ -107,7 +107,7 @@ def load_train_data_BOW(num_data=None):
     test_input = test_df.lemmas
     test_output = test_df.emotion
 
-    word_list_valid = load_word_list(thr_saturation=0, thr_intensity=0)
+    word_list_valid = load_word_list(thr_saturation=0.8, thr_intensity=15)
     words_counter, analyze = load_word_counter(word_list_valid)
 
     train_input = words_counter.transform(train_input)
@@ -438,7 +438,7 @@ def LG_BOW():
     pass
 
 def NN_BOW_keras():
-    batch_size = 32
+    batch_size = 16
 
     train_input, train_output, test_input, test_output = load_train_data_BOW()
 
@@ -456,6 +456,7 @@ def NN_BOW_keras():
     X = model_input
 
     # --- 1st hidden layer --- #
+
     X = Dense(units=64)(X)
     X = ReLU()(X)
 
@@ -481,7 +482,7 @@ def NN_BOW_keras():
                                                      verbose=1,
                                                      mode='auto',
                                                      period=1,
-                                                     monitor='loss')
+                                                     monitor='val_loss')
 
     logdir = os.path.join("logs", time_now)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
@@ -505,11 +506,11 @@ def NN_BOW_keras():
                         validation_data=[test_input, test_output],
                         callbacks=[cp_callback])
 
-def LSTM():
+def LSTM_BOW():
     train_input, train_output, test_input, test_output = load_train_data_pure()
 
 
-    words_lists_valid = load_word_list(thr_saturation=0, thr_intensity=0)
+    words_lists_valid = load_word_list(thr_saturation=0.5, thr_intensity=0)
     token = Tokenizer()
     token.fit_on_texts(words_lists_valid.words)
 
@@ -526,24 +527,36 @@ def LSTM():
     test_output = label_encode(label_encoder, test_output)
 
     model = Sequential()
-    model.add(Embedding(output_dim=32,
+    model.add(Embedding(output_dim=16,
                         input_dim=len(token.word_index),
                         input_length=30))
     model.add(Dropout(0.2))
-    model.add(Flatten())
-    model.add(Dense(units=256,
+    model.add(LSTM(16))
+    model.add(Dense(units=128,
                     activation='relu'))
     model.add(Dropout(0.35))
     model.add(Dense(units=8,
                     activation='softmax'))
+    model.summary()
+    checkpoint_path = f"{dataFolder}model/model_{time_now}.hdf5"
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                     save_best_only=True,
+                                                     verbose=1,
+                                                     mode='auto',
+                                                     period=1,
+                                                     monitor='val_loss')
+
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
 
     history = model.fit(train_input, train_output,
                         epochs=1000,
-                        batch_size=32,
-                        validation_data=[test_input, test_output])
+                        batch_size=256,
+                        validation_data=[test_input, test_output],
+                        callbacks=[cp_callback])
 
 
 
@@ -569,6 +582,6 @@ if __name__ == '__main__':
 
     # NN_BOW_keras()
 
-    LSTM()
+    LSTM_BOW()
 
     pass
