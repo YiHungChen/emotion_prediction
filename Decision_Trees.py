@@ -21,7 +21,7 @@ from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
 from data_preprocessing import load_word_counter, load_word_list
 from folder_path import folder_path
 
-from keras.models import Model, Sequential
+from keras.models import Model, Sequential, load_model
 from keras.layers import Input, Dense, ReLU, Softmax
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.embeddings import Embedding
@@ -85,6 +85,18 @@ def load_train_data_pure(num_data=None):
     test_output = test_df.emotion
 
     return train_input, train_output, test_input, test_output
+
+def load_upload_data_pure():
+    DS = pd.read_pickle(f'{dataFolder}Dataset/DS.pkl')
+
+    upload_df = DS.loc[DS.identification=='test']
+
+    # --- training data --- #
+    upload_input = upload_df.lemmas
+
+
+
+    return upload_df, upload_df
 
 
 def load_train_data_BOW(num_data=None):
@@ -510,7 +522,7 @@ def LSTM_BOW():
     train_input, train_output, test_input, test_output = load_train_data_pure()
 
 
-    words_lists_valid = load_word_list(thr_saturation=0.5, thr_intensity=0)
+    words_lists_valid = load_word_list(thr_saturation=0, thr_intensity=0)
     token = Tokenizer()
     token.fit_on_texts(words_lists_valid.words)
 
@@ -553,10 +565,41 @@ def LSTM_BOW():
                   metrics=['accuracy'])
 
     history = model.fit(train_input, train_output,
-                        epochs=1000,
-                        batch_size=256,
+                        epochs=30,
+                        batch_size=1024,
                         validation_data=[test_input, test_output],
                         callbacks=[cp_callback])
+
+    return model
+
+    pass
+
+def LSTM_BOW_predict(model):
+    # model = load_model(f'{folder_path}model/model_21-12-28_2117.hdf5')
+    model.summary()
+    upload_df, upload_input = load_upload_data_pure()
+
+    train_input, train_output, test_input, test_output = load_train_data_pure()
+
+    words_lists_valid = load_word_list(thr_saturation=0, thr_intensity=0)
+    token = Tokenizer()
+    token.fit_on_texts(words_lists_valid.words)
+
+    upload_input_seq = token.texts_to_sequences(upload_input.lemmas)
+
+    upload_input = sequence.pad_sequences(upload_input_seq, maxlen=30)
+
+    upload_predict = model.predict(upload_input, batch_size=1024, use_multiprocessing=True)
+
+    label_encoder = LabelEncoder()
+    label_encoder.classes_ = numpy.load('classes.npy', allow_pickle=True)
+
+    upload_predict = label_decode(label_encoder, upload_predict)
+
+    output_result(upload_df, upload_predict)
+
+
+
 
 
 
@@ -582,6 +625,8 @@ if __name__ == '__main__':
 
     # NN_BOW_keras()
 
-    LSTM_BOW()
+    model = LSTM_BOW()
+
+    LSTM_BOW_predict(model)
 
     pass

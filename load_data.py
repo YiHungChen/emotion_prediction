@@ -16,10 +16,14 @@ with open('dm2021-lab2-hw2/tweets_DM.json') as jsonfile:
     tweets_id = []
     tweets_text = []
     tweets_emotion = []
+    tweets_hashtags = []
+    tweets_score = []
     for tweet in jsonfile.readlines():
         dic = json.loads(tweet)
         tweets_id.append(dic['_source']['tweet']['tweet_id'])
         tweets_text.append(dic['_source']['tweet']['text'])
+        tweets_hashtags.append(dic['_source']['tweet']['hashtags'])
+        tweets_score.append(dic['_score'])
 
     pass
 
@@ -39,14 +43,15 @@ def data_cleaning(x):
 
     # x = re.sub('[0-9]', "", x)
     x = re.sub(r'@\w+', "", x)
-    # x = re.sub(r'#\w+', "", x)
     x = re.sub(r'#', "", x)
-    # x = re.sub("", "", x)
-    # x = re.sub("", "", x)
+    x = re.sub(r'a+h+',"ah",x)
+    x = re.sub(r'a+t+','at',x)
+
+
     output.append(TreebankWordDetokenizer().detokenize(lemmas_words(x)))
     return output
 
-value = tqdm(tweets_text)
+value = tqdm(tweets_text[:10])
 
 
 # tweets_text = tweets_text[:10]
@@ -54,9 +59,11 @@ value = tqdm(tweets_text)
 list(map(data_cleaning, value))
 # tweets_text.map(data_cleaning())
 
-tweets_df['id'] = tweets_id
-tweets_df['text'] = tweets_text
-tweets_df['lemmas'] = output
+tweets_df['id'] = tweets_id[:10]
+tweets_df['text'] = tweets_text[:10]
+tweets_df['lemmas'] = output[:10]
+tweets_df['score'] = tweets_score[:10]
+tweets_df['hashtag'] = tweets_hashtags[:10]
 
 tweets_ident = pd.read_csv('dm2021-lab2-hw2/data_identification.csv')
 tweets_ident = tweets_ident.rename(columns={"tweet_id": "id"})
