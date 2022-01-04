@@ -73,7 +73,7 @@ def score_calculation(train_df, words_list_valid):
         train_sentence = train_sentence.mul(train_saturation, axis=0)
 
         score = train_sentence.sum(axis=0)
-        score = normalization(score)
+        # score = normalization(score)
 
         # print(score)
 
@@ -107,6 +107,7 @@ def score_calculation(train_df, words_list_valid):
 
     pass
 
+
 def normalization(df):
 
     a = df.loc['anger':'trust']
@@ -122,8 +123,7 @@ def training_data():
     train_df = load_data()
 
     # --- load word list --- #
-    words_list_valid = load_word_list(thr_saturation=0.5, thr_intensity=0)
-
+    words_list_valid = load_word_list(thr_saturation=0, thr_intensity=0)
 
 
     # --- score calculation --- #
@@ -132,8 +132,8 @@ def training_data():
     # --- output file --- #
     train_output = train_df.emotion
     output['output'] = train_output
-    output.to_csv('result.csv')
-    output.to_pickle('result.pkl')
+    output.to_csv(f'{folder_path}result\result.csv')
+    output.to_pickle(f'{folder_path}result\result.pkl')
 
     pass
 
@@ -153,10 +153,31 @@ def test_data():
     output.to_pickle(f'{folder_path}result_test.pkl')
 
 
+def training_data_CNN():
+    # --- load data --- #
+    train_df = load_data()
+
+    # --- load word list --- #
+    words_list_valid = load_word_list(thr_saturation=0, thr_intensity=0)
+
+    # --- CNN dataset preparation --- #
+
+
+
+
+
+
+
+
+    pass
+
+
 if __name__ == '__main__':
 
-    training_data()
+    # training_data()
 
     # test_data()
+
+    # Training_data_CNN()
 
     pass

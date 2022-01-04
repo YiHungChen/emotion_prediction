@@ -30,6 +30,7 @@ import tensorflow as tf
 from keras.preprocessing import sequence
 from keras.preprocessing.text import Tokenizer
 from keras.layers.recurrent import LSTM
+
 time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 
 # MetalAM-970
@@ -86,15 +87,14 @@ def load_train_data_pure(num_data=None):
 
     return train_input, train_output, test_input, test_output
 
+
 def load_upload_data_pure():
     DS = pd.read_pickle(f'{dataFolder}Dataset/DS.pkl')
 
-    upload_df = DS.loc[DS.identification=='test']
+    upload_df = DS.loc[DS.identification == 'test']
 
     # --- training data --- #
     upload_input = upload_df.lemmas
-
-
 
     return upload_df, upload_df
 
@@ -227,7 +227,8 @@ def Decision_tree():
 
     pass
 
-def NB_score ():
+
+def NB_score():
     train_input, train_output, test_input, test_output = load_train_data()
 
     bnb = BernoulliNB(binarize=0.0)
@@ -248,7 +249,7 @@ def NB_score ():
     pass
 
 
-def NB_BOW ():
+def NB_BOW():
     train_input, train_output, test_input, test_output = load_train_data_BOW()
 
     bnb = BernoulliNB(binarize=0.99)
@@ -268,7 +269,8 @@ def NB_BOW ():
 
     pass
 
-def GPR_BOW ():
+
+def GPR_BOW():
     train_input, train_output, test_input, test_output = load_train_data_BOW()
 
     kernel = DotProduct() + WhiteKernel()
@@ -449,6 +451,7 @@ def LG_BOW():
 
     pass
 
+
 def NN_BOW_keras():
     batch_size = 16
 
@@ -518,9 +521,9 @@ def NN_BOW_keras():
                         validation_data=[test_input, test_output],
                         callbacks=[cp_callback])
 
+
 def LSTM_BOW():
     train_input, train_output, test_input, test_output = load_train_data_pure()
-
 
     words_lists_valid = load_word_list(thr_saturation=0, thr_intensity=0)
     token = Tokenizer()
@@ -574,6 +577,7 @@ def LSTM_BOW():
 
     pass
 
+
 def LSTM_BOW_predict(model):
     # model = load_model(f'{folder_path}model/model_21-12-28_2117.hdf5')
     model.summary()
@@ -597,11 +601,6 @@ def LSTM_BOW_predict(model):
     upload_predict = label_decode(label_encoder, upload_predict)
 
     output_result(upload_df, upload_predict)
-
-
-
-
-
 
     pass
 
