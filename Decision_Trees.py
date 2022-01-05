@@ -26,6 +26,7 @@ from keras.layers import Input, Dense, ReLU, Softmax
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.embeddings import Embedding
 import tensorflow as tf
+from tensorflow.keras import models,layers
 
 from keras.preprocessing import sequence
 from keras.preprocessing.text import Tokenizer
@@ -604,6 +605,65 @@ def LSTM_BOW_predict(model):
 
     pass
 
+def CNN():
+    # --- load CNN feature --- #
+    num_data = 0
+
+    if num_data:
+        # DS = pd.read_pickle('train_processed-result/result.pkl')
+        DS = pd.read_pickle(f'{dataFolder}CNN_Feature.pkl').loc[:num_data]
+    else:
+        DS = pd.read_pickle(f'{dataFolder}CNN_Feature.pkl')
+
+    msk = np.random.rand(len(DS)) <= 0.8
+
+    train_df = DS[msk].reset_index(drop=True)
+    test_df = DS[~msk].reset_index(drop=True)
+
+    train_input = train_df.CNN_Feature
+    train_output = train_df.predict_emotion
+
+    test_input = test_df.CNN_Feature
+    test_output = test_df.predict_emotion
+
+    label_encoder = LabelEncoder()
+    label_encoder.classes_ = numpy.load('classes.npy', allow_pickle=True)
+
+    train_output = label_encode(label_encoder, train_output)
+    test_output = label_encode(label_encoder, test_output)
+
+    model = models.Sequential()
+    model.add(layers.Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(30, 8, 1)))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(8, activation='softmax'))
+
+    model.summary()
+
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    train_input = np.array(train_input.tolist())
+    train_output =  np.array(train_output.tolist())
+
+    test_input = np.array(test_input.tolist())
+    test_output =  np.array(test_output.tolist())
+
+    history = model.fit(train_input, train_output, epochs=100, validation_data=[test_input, test_output])
+
+
+
+
+
+
+
+    pass
+
+
 
 if __name__ == '__main__':
     # NN_score()
@@ -624,8 +684,10 @@ if __name__ == '__main__':
 
     # NN_BOW_keras()
 
-    model = LSTM_BOW()
+    # model = LSTM_BOW()
 
-    LSTM_BOW_predict(model)
+    # LSTM_BOW_predict(model)
+
+    CNN()
 
     pass
