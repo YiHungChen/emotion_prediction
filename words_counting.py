@@ -54,7 +54,7 @@ if __name__ == '__main__':
     emotion_value = emotion_value.apply(lambda x: round(x * 100 / post_total, 3))
 
     # --- create total words list --- #
-    BOW_vectorizer = CountVectorizer(stop_words='english')
+    BOW_vectorizer = CountVectorizer()
     BOW_vectorizer.fit(train.lemmas)
 
     total_words_list = BOW_vectorizer.get_feature_names_out()

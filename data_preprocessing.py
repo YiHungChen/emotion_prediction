@@ -41,7 +41,7 @@ def load_word_list(thr_saturation=0, thr_intensity=0):
     return words_list_valid
 
 def load_word_counter(words_list_valid: pd.DataFrame()):
-    words_counter = CountVectorizer(stop_words='english')
+    words_counter = CountVectorizer()
     words_counter = words_counter.fit(words_list_valid.words)
     analyze = words_counter.build_analyzer()
 
@@ -62,7 +62,7 @@ def score_calculation(train_df, words_list_valid):
     for index_tweets, tweet in enumerate(train_df.lemmas):
 
         # --- clean the repeated words --- #
-        tweet = ' '.join(unique_list(tweet.split()))
+        # tweet = ' '.join(unique_list(tweet.split()))
 
         # --- start time counting --- #
         start = time.time()
