@@ -7,7 +7,7 @@ import pandas as pd
 import re
 from lemmatization import lemmas_words
 from nltk.tokenize.treebank import TreebankWordDetokenizer
-from tqdm import tqdm
+
 from folder_path import folder_path
 
 tweets_df = pd.DataFrame()
@@ -71,6 +71,7 @@ tweets_ident = tweets_ident.rename(columns={"tweet_id": "id"})
 tweets_df = pd.merge(tweets_df, tweets_ident, on=['id'])
 
 tweets_df.to_pickle(f'{folder_path}Dataset/DS.pkl')
+tweets_df.to_csv(f'{folder_path}Dataset/DS.csv', index=False)
 print(f'{folder_path}Dataset/DS.pkl is saved !!!')
 
 tweets_emotion = pd.read_csv('dm2021-lab2-hw2/emotion.csv')

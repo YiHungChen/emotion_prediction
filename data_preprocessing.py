@@ -259,9 +259,9 @@ def test_data_CNN():
 
     # --- CNN dataset preparation --- #
     output = CNN_data_preparation_test(test_df, words_list_valid)
-
-    output.to_csv(f'{folder_path}CNN_Feature_test.csv', index=False)
     output.to_pickle(f'{folder_path}CNN_Feature_test.pkl')
+    output.to_csv(f'{folder_path}CNN_Feature_test.csv', index=False)
+
 
 
     pass

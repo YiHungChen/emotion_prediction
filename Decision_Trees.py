@@ -675,10 +675,28 @@ def CNN():
                         batch_size=256,
                         validation_data=[test_input, test_output],
                         callbacks=[cp_callback])
+    pass
 
 
+def CNN_predict():
+
+    DS = pd.read_pickle(f'{dataFolder}CNN_Feature_test.pkl')
+
+    model = load_model(f'{folder_path}model/model_CNN_22-01-06_0714.hdf5')
+    model.summary()
+
+    upload_df = pd.DataFrame({"id":DS.predict_emotion})
+    upload_input = np.array(DS.CNN_Feature.tolist())
 
 
+    upload_predict = model.predict(upload_input, batch_size=1024, use_multiprocessing=True)
+
+    label_encoder = LabelEncoder()
+    label_encoder.classes_ = numpy.load('classes.npy', allow_pickle=True)
+
+    upload_predict = label_decode(label_encoder, upload_predict)
+
+    output_result(upload_df, upload_predict)
 
 
 
@@ -709,6 +727,8 @@ if __name__ == '__main__':
 
     # LSTM_BOW_predict(model)
 
-    CNN()
+    # CNN()
+
+    CNN_predict()
 
     pass
