@@ -147,6 +147,46 @@ def CNN_data_preparation(train_df, words_list_valid):
 
     pass
 
+def CNN_data_preparation_test(test_df, words_list_valid):
+
+    results = []
+    predict_id = []
+    total_duration = 0
+    words_counter, analyze = load_word_counter(words_list_valid)
+    columns = ['anger', 'joy', 'anticipation', 'disgust', 'fear', 'sadness', 'surprise', 'trust', 'saturation']
+
+    for index_tweet, tweet in enumerate(test_df.lemmas):
+        start = time.time()
+        word_list = words_list_valid.words.isin(analyze(tweet))
+        train_sentence = words_list_valid.loc[word_list, columns]
+        train_output = train_sentence.mul(train_sentence['saturation'], axis=0).reset_index(drop=True).loc[:, 'anger':'trust']
+        zero_df = pd.DataFrame(np.zeros([30-len(train_output), 8]), columns=train_output.columns)
+        train_output = train_output.append(zero_df)
+        results.append(train_output.values)
+        predict_id.append(test_df.id.loc[index_tweet])
+
+        end = time.time()
+        duration = end - start
+        total_duration += duration
+        progress = ((index_tweet + 1) / len(test_df)) * 100
+
+        et = total_duration * 100 / progress
+        td = total_duration
+        eta = et - td
+
+        et = time.strftime('%H:%M:%S', time.gmtime(total_duration * 100 / progress))
+        td = time.strftime('%H:%M:%S', time.gmtime(total_duration))
+        eta = time.strftime('%H:%M:%S', time.gmtime(eta))
+
+        print(f'\r{progress:.2f}%, || PT: {td}, ET: {et}, ETA: {eta},'
+              f' {(total_duration/(index_tweet+1)):.4f} s/tweet', end="")
+
+        pass
+    output = pd.DataFrame({'predict_emotion': predict_id, 'CNN_Feature': results})
+    return output
+
+    pass
+
 
 def normalization(df):
 
@@ -201,18 +241,27 @@ def training_data_CNN():
     words_list_valid = load_word_list(thr_saturation=0, thr_intensity=0)
 
     # --- CNN dataset preparation --- #
-    output = CNN_data_preparation(train_df.loc[:10000], words_list_valid)
-
-    output.to_csv(f'{folder_path}CNN_Feaeture.csv', index=False)
-    output.to_pickle(f'{folder_path}CNN_Feaeture.pkl')
-
+    output = CNN_data_preparation(train_df, words_list_valid)
+    output.to_pickle(f'{folder_path}CNN_Feature-1.pkl')
+    output.to_csv(f'{folder_path}CNN_Feature-1.csv', index=False)
 
 
 
+    pass
 
 
+def test_data_CNN():
+    # --- load data --- #
+    test_df = load_data_test()
 
+    # --- load word list --- #
+    words_list_valid = load_word_list(thr_saturation=0, thr_intensity=0)
 
+    # --- CNN dataset preparation --- #
+    output = CNN_data_preparation_test(test_df, words_list_valid)
+
+    output.to_csv(f'{folder_path}CNN_Feature_test.csv', index=False)
+    output.to_pickle(f'{folder_path}CNN_Feature_test.pkl')
 
 
     pass
@@ -225,5 +274,7 @@ if __name__ == '__main__':
     # test_data()
 
     training_data_CNN()
+
+    # test_data_CNN()
 
     pass

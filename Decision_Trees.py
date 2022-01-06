@@ -31,6 +31,7 @@ from tensorflow.keras import models,layers
 from keras.preprocessing import sequence
 from keras.preprocessing.text import Tokenizer
 from keras.layers.recurrent import LSTM
+from tensorflow import keras
 
 time_now = dt.datetime.now().strftime("%y-%m-%d_%H%M")
 
@@ -543,14 +544,13 @@ def LSTM_BOW():
     test_output = label_encode(label_encoder, test_output)
 
     model = Sequential()
-    model.add(Embedding(output_dim=16,
+    model.add(Embedding(output_dim=32,
                         input_dim=len(token.word_index),
                         input_length=30))
-    model.add(Dropout(0.2))
+    # model.add(Dropout(0.2))
     model.add(LSTM(16))
-    model.add(Dense(units=128,
-                    activation='relu'))
-    model.add(Dropout(0.35))
+    # model.add(Dense(units=256, activation='relu'))
+    # model.add(Dropout(0.35))
     model.add(Dense(units=8,
                     activation='softmax'))
     model.summary()
@@ -611,11 +611,11 @@ def CNN():
 
     if num_data:
         # DS = pd.read_pickle('train_processed-result/result.pkl')
-        DS = pd.read_pickle(f'{dataFolder}CNN_Feature.pkl').loc[:num_data]
+        DS = pd.read_pickle(f'{dataFolder}CNN_Feature_all.pkl').loc[:num_data]
     else:
-        DS = pd.read_pickle(f'{dataFolder}CNN_Feature.pkl')
+        DS = pd.read_pickle(f'{dataFolder}CNN_Feature_all.pkl')
 
-    msk = np.random.rand(len(DS)) <= 0.8
+    msk = np.random.rand(len(DS)) <= 0.9
 
     train_df = DS[msk].reset_index(drop=True)
     test_df = DS[~msk].reset_index(drop=True)
@@ -633,17 +633,24 @@ def CNN():
     test_output = label_encode(label_encoder, test_output)
 
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(30, 8, 1)))
+    model.add(layers.Conv2D(64, (2, 2), padding="same",activation='selu', input_shape=(30, 8, 1)))
+    model.add(Dropout(0.4))
+    # model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(128, (2, 2), padding="same", activation='selu'))
+    model.add(layers.Conv2D(256, (2, 2), padding="same", activation='selu'))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
-    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(Dropout(0.4))
     model.add(layers.Flatten())
-    model.add(layers.Dense(64, activation='relu'))
+    model.add(Dropout(0.4))
+    model.add(layers.Dense(128, activation='selu'))
+    model.add(Dropout(0.4))
     model.add(layers.Dense(8, activation='softmax'))
 
     model.summary()
 
-    model.compile(optimizer='adam',
+    opt = keras.optimizers.Adam(learning_rate=0.0001)
+
+    model.compile(optimizer=opt,
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
 
@@ -651,9 +658,23 @@ def CNN():
     train_output =  np.array(train_output.tolist())
 
     test_input = np.array(test_input.tolist())
-    test_output =  np.array(test_output.tolist())
+    test_output = np.array(test_output.tolist())
 
-    history = model.fit(train_input, train_output, epochs=100, validation_data=[test_input, test_output])
+    checkpoint_path = f"{dataFolder}model/model_CNN_{time_now}.hdf5"
+
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                     save_best_only=True,
+                                                     verbose=1,
+                                                     mode='auto',
+                                                     period=1,
+                                                     monitor='val_loss')
+
+    history = model.fit(train_input,
+                        train_output,
+                        epochs=1000,
+                        batch_size=256,
+                        validation_data=[test_input, test_output],
+                        callbacks=[cp_callback])
 
 
 

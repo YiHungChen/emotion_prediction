@@ -23,8 +23,9 @@ def calculate_frequency(train, emotion, min_emotion_value, total_words_df):
     emotion_frequencies = pd.DataFrame({'words': BOW_vectorizer.get_feature_names_out()})
     last_batch = 0
     for i in myRange(min_emotion_value, num_emotion, min_emotion_value):
-        rest = min_emotion_value - (i - last_batch)
-        emotion_df = train.loc[train.emotion == emotion].sample(n=min_emotion_value)
+        rest = 2 * min_emotion_value - 2 * (i - last_batch)
+        emotion_df = train.loc[train.emotion == emotion][last_batch : i]
+        emotion_df = emotion_df.append(train.loc[train.emotion == emotion].sample(n=min_emotion_value))
         if rest:
             emotion_df = emotion_df.append(train.loc[train.emotion == emotion][0:last_batch].sample(n=rest))
             pass
@@ -48,7 +49,8 @@ if __name__ == '__main__':
     # --- calculate the histogram --- #
     post_total = len(train)
     emotion_value = train.groupby(['emotion']).count()['text']
-    min_emotion_value = min(emotion_value)
+    # min_emotion_value = min(emotion_value)
+    min_emotion_value = 2000
     emotion_value = emotion_value.apply(lambda x: round(x * 100 / post_total, 3))
 
     # --- create total words list --- #
