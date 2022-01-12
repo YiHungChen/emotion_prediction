@@ -18,7 +18,7 @@ from sklearn.naive_bayes import BernoulliNB
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel
 
-from data_preprocessing import load_word_counter, load_word_list
+from emotion_score import load_word_counter, load_word_list
 from folder_path import folder_path
 
 from keras.models import Model, Sequential, load_model
@@ -682,7 +682,7 @@ def CNN_predict():
 
     DS = pd.read_pickle(f'{dataFolder}CNN_Feature_test.pkl')
 
-    model = load_model(f'{folder_path}model/model_CNN_22-01-06_0714.hdf5')
+    model = load_model(f'{folder_path}model/model_CNN_22-01-07_0917.hdf5')
     model.summary()
 
     upload_df = pd.DataFrame({"id":DS.predict_emotion})
